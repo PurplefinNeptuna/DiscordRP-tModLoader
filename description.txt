@@ -1,0 +1,14 @@
+This mod add a little extra detail of your ingame terraria activity to your discord status.
+Still WIP (only 7 biomes detected)
+
+==CURRENTLY CAN'T ENABLE THIS MOD WITHOUT SPECIAL TREATMENT==
+
+a little how to:
+1. Get discord-rpc.dll (32 bit) from discordapp/discord-rpc github repository
+2. Place it in the same directory as your Terraria.exe
+(May still not work)
+
+TO DO:
+- somehow create/get managed discord-rpc.dll for easier install
+- detect more biomes and areas
+- get better screenshoot of biomes
