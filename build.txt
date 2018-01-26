@@ -1,6 +1,7 @@
 author = Purplefin Neptuna
-version = 0.1.2.1
+version = 0.2.1.2
 displayName = Discord Rich Presence
 includeSource = false
-buildIgnore = *.git, *.csproj, *.user, *.sln, *.exe, *.dll, .vs/*, bin/*, lib/*, obj/*	
+dllReferences = DiscordRPCsharp
+buildIgnore = *.git, *.csproj, *.user, *.sln, *.exe, .vs/*, bin/*, obj/*	
 side = Client
