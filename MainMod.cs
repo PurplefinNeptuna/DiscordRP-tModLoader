@@ -30,7 +30,6 @@ namespace DiscordRP
             RPControl.presence.startTimestamp = timenow;
 
             RPControl.Update();
-            RPControl.firstLaunch = false;
         }
 
         public override void PostSetupContent()
@@ -60,8 +59,6 @@ namespace DiscordRP
             RPControl.presence.smallImageKey = null;
             RPControl.presence.smallImageText = null;
             RPControl.Update();
-            RPControl.canUpdate = false;
-            RPUtility.inWorld = false;
         }
 
         public override void Unload()

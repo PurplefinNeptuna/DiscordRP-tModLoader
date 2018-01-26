@@ -1,6 +1,6 @@
 author = Purplefin Neptuna
-version = 0.1.1.2
+version = 0.1.2.1
 displayName = Discord Rich Presence
 includeSource = false
-buildIgnore = *.git, *.csproj, *.user, *.sln, *.exe, *.dll
+buildIgnore = *.git, *.csproj, *.user, *.sln, *.exe, *.dll, .vs/*, bin/*, lib/*, obj/*	
 side = Client
