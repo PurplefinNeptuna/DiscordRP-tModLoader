@@ -1,4 +1,5 @@
-﻿using Terraria;
+﻿using System;
+using Terraria;
 using Terraria.ModLoader;
 
 namespace DiscordRP
@@ -15,27 +16,27 @@ namespace DiscordRP
             if (item.melee)
             {
                 RPUtility.type = RPUtility.ATKType.melee;
-                RPUtility.atk = (int)(RPUtility.atk * player.meleeDamage);
+                RPUtility.atk = (int)Math.Ceiling(RPUtility.atk * player.meleeDamage);
             }
             else if (item.ranged)
             {
                 RPUtility.type = RPUtility.ATKType.ranged;
-                RPUtility.atk = (int)(RPUtility.atk * player.rangedDamage);
+                RPUtility.atk = (int)Math.Ceiling(RPUtility.atk * player.rangedDamage);
             }
             else if (item.magic)
             {
                 RPUtility.type = RPUtility.ATKType.magic;
-                RPUtility.atk = (int)(RPUtility.atk * player.magicDamage);
+                RPUtility.atk = (int)Math.Ceiling(RPUtility.atk * player.magicDamage);
             }
             else if (item.thrown)
             {
                 RPUtility.type = RPUtility.ATKType.thrown;
-                RPUtility.atk = (int)(RPUtility.atk * player.thrownDamage);
+                RPUtility.atk = (int)Math.Ceiling(RPUtility.atk * player.thrownDamage);
             }
             else if (item.summon)
             {
                 RPUtility.type = RPUtility.ATKType.summon;
-                RPUtility.atk = (int)(RPUtility.atk * player.minionDamage);
+                RPUtility.atk = (int)Math.Ceiling(RPUtility.atk * player.minionDamage);
             }
         }
     }
