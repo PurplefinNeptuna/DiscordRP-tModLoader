@@ -3,9 +3,6 @@ namespace DiscordRP
 {
     public static class RPControl
     {
-        public static bool canUpdate = false;
-        public static bool firstLaunch = true;
-
         public static DiscordRP.RichPresence presence;
         public static string applicationId = "404654478072086529";
 
@@ -54,8 +51,7 @@ namespace DiscordRP
 
         public static void Update()
         {
-            if (canUpdate || firstLaunch)
-                DiscordRP.UpdatePresence(ref presence);
+            DiscordRP.UpdatePresence(ref presence);
         }
     }
 }

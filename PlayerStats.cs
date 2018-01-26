@@ -4,18 +4,16 @@ using Terraria.ModLoader;
 namespace DiscordRP
 {
     class Testplayer : ModPlayer
-    {        
-
+    {
+        public int updateTick = 0;
+        public int maxUpdateTick = 180;
         public override void OnEnterWorld(Player someone)
         {
             string wName = Main.worldName;
             bool expert = Main.expertMode;
             string wDiff = (expert) ? "(Expert)" : "(Normal)";
             RPControl.presence.details = string.Format("Playing {0} {1}", wName, wDiff);
-            RPControl.canUpdate = true;
             RPControl.Update();
-            RPUtility.inWorld = true;
-            RPUtility.StartTimer();
         }
 
         public override void PostUpdate()
@@ -38,6 +36,16 @@ namespace DiscordRP
                 RPUtility.biome = RPUtility.Biomes.ocean;
             else
                 RPUtility.biome = RPUtility.Biomes.forest;
+
+            if (updateTick < maxUpdateTick)
+            {
+                updateTick++;
+            }
+            else
+            {
+                updateTick = 0;
+                RPUtility.Update();
+            }
         }
 
     }

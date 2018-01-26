@@ -24,9 +24,6 @@ namespace DiscordRP
             summon
         };
 
-        public static bool inWorld = false;
-        public static bool firstEnterWorld = true;
-
         public static Biomes biome = Biomes.forest;
 
         public static int life = 0;
@@ -36,23 +33,10 @@ namespace DiscordRP
         public static int atk = 0;
         public static ATKType type = ATKType.melee;
 
-        public static Timer timer = new Timer(3000);
-
-        public static void StartTimer()
-        {
-            if (firstEnterWorld)
-            {
-                timer.Elapsed += UpdateTimed;
-                firstEnterWorld = false;
-            }
-            timer.AutoReset = false;
-            timer.Start();
-        }
-
         public static void Update()
         {
             RPControl.presence.state = string.Format("HP: {0} MP: {1} DEF: {2}", life, mana, def);
-
+            
             switch (type)
             {
                 case ATKType.melee:
@@ -110,13 +94,6 @@ namespace DiscordRP
             }
 
             RPControl.Update();
-        }
-
-        public static void UpdateTimed(object sender, ElapsedEventArgs e)
-        {
-            Update();
-            if (inWorld)
-                timer.Start();
         }
 
     }
