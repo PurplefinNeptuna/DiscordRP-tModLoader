@@ -1,13 +1,13 @@
-﻿using DiscordRPCsharp;
+﻿using drpc;
 
 namespace DiscordRP
 {
     public static class RPControl
     {
-        public static DiscordRPCsharp.DiscordRP.RichPresence presence;
+        public static drpc.DiscordRP.RichPresence presence;
         public static string applicationId = "404654478072086529";
 
-        public static DiscordRPCsharp.DiscordRP.EventHandlers handlers;
+        public static drpc.DiscordRP.EventHandlers handlers;
 
         public static void ReadyCallback()
         {
@@ -29,30 +29,30 @@ namespace DiscordRP
         {
         }
 
-        public static void RequestCallback(ref DiscordRPCsharp.DiscordRP.JoinRequest request)
+        public static void RequestCallback(ref drpc.DiscordRP.JoinRequest request)
         {
         }
 
         public static void Enable()
         {
-            handlers = new DiscordRPCsharp.DiscordRP.EventHandlers();
+            handlers = new drpc.DiscordRP.EventHandlers();
             handlers.readyCallback = ReadyCallback;
             handlers.disconnectedCallback += DisconnectedCallback;
             handlers.errorCallback += ErrorCallback;
             handlers.joinCallback += JoinCallback;
             handlers.spectateCallback += SpectateCallback;
             handlers.requestCallback += RequestCallback;
-            DiscordRPCsharp.DiscordRP.Initialize(applicationId, ref handlers, true, null);
+            drpc.DiscordRP.Initialize(applicationId, ref handlers, true, null);
         }
 
         public static void Disable()
         {
-            DiscordRPCsharp.DiscordRP.Shutdown();
+            drpc.DiscordRP.Shutdown();
         }
 
         public static void Update()
         {
-            DiscordRPCsharp.DiscordRP.UpdatePresence(ref presence);
+            drpc.DiscordRP.UpdatePresence(ref presence);
         }
     }
 }
