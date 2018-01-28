@@ -1,7 +1,9 @@
 ==NOW WORKING PROPERLY==
 This mod add a little extra detail of your ingame terraria activity to your discord status.
-Still WIP (only 7 biomes detected)
 
-To Do:
-- detect more biomes and areas
-- get better screenshoot of biomes
+Displayed info:
+- Player current biome
+- Weapon damage (with type)
+- World name and difficulty (Normal/Expert)
+- Health, Mana, Defense
+- Play time
