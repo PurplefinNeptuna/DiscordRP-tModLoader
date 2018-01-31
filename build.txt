@@ -1,8 +1,8 @@
 author = Purplefin Neptuna
-version = 0.4.1.1
+version = 0.5.1.3
 displayName = Discord Rich Presence
-homepage = https://github.com/PurplefinNeptuna/DiscordRP-tModLoader
-includeSource = false
+homepage = https://forums.terraria.org/index.php?threads/neptunas-mod-collection.66112/
+includeSource = true
 dllReferences = drpc
 buildIgnore = *.git, *.csproj, *.user, *.sln, *.exe, .vs/*, bin/*, obj/*	
 side = Client

@@ -1,4 +1,6 @@
-﻿using System.Timers;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 
 namespace DiscordRP
@@ -9,50 +11,90 @@ namespace DiscordRP
         public static BitsByte zone2 = new BitsByte();
         public static BitsByte zone3 = new BitsByte();
 
-        public enum ATKType
-        {
-            melee,
-            ranged,
-            magic,
-            thrown,
-            summon
-        };
-
         public static int life = 0;
         public static int mana = 0;
         public static int def = 0;
-
         public static int atk = 0;
-        public static ATKType type = ATKType.melee;
 
-        public static void Update()
+        public static Item item;
+        public static Player player;
+
+        /*boss type
+        50             King Slime
+        4              EoC
+        13/14/15       EoW (H/B/T)
+        266            BoC
+        222            Queen Bee
+        35             Skeletron
+        113            WoF
+        125/126        The Twins (Retinazer/Spazmatism)
+        134            The Destroyer
+        127            Skeletron Prime
+        262            Plantera
+        245            Golem
+        370            Duke Fishron
+        439            Lunatic Cultist
+        396/397/398    Moon Lord
+        */
+        static List<int> bossID = new List<int>() {
+            50,
+            4,
+            13,14,15,
+            266,
+            222,
+            35,
+            113,
+            125,126,
+            134,
+            127,
+            262,
+            245,
+            370,
+            439,
+            396,397,398
+        };
+
+        static NPC bossNPC;
+
+        public static void GetItemStat()
         {
-            RPControl.presence.state = string.Format("HP: {0} MP: {1} DEF: {2}", life, mana, def);
-            
-            switch (type)
+            if(item != null)
             {
-                case ATKType.melee:
+                if (item.melee)
+                {
+                    atk = (int)Math.Ceiling(item.damage * player.meleeDamage);
                     RPControl.presence.smallImageKey = string.Format("atk_melee");
                     RPControl.presence.smallImageText = string.Format("ATK: {0} (Melee)", atk);
-                    break;
-                case ATKType.ranged:
+                }
+                else if (item.ranged)
+                {
+                    atk = (int)Math.Ceiling(item.damage * player.rangedDamage);
                     RPControl.presence.smallImageKey = string.Format("atk_range");
                     RPControl.presence.smallImageText = string.Format("ATK: {0} (Ranged)", atk);
-                    break;
-                case ATKType.magic:
+                }
+                else if (item.magic)
+                {
+                    atk = (int)Math.Ceiling(item.damage * player.magicDamage);
                     RPControl.presence.smallImageKey = string.Format("atk_magic");
                     RPControl.presence.smallImageText = string.Format("ATK: {0} (Magic)", atk);
-                    break;
-                case ATKType.thrown:
+                }
+                else if (item.thrown)
+                {
+                    atk = (int)Math.Ceiling(item.damage * player.thrownDamage);
                     RPControl.presence.smallImageKey = string.Format("atk_throw");
                     RPControl.presence.smallImageText = string.Format("ATK: {0} (Thrown)", atk);
-                    break;
-                case ATKType.summon:
+                }
+                else if (item.summon)
+                {
+                    atk = (int)Math.Ceiling(item.damage * player.minionDamage);
                     RPControl.presence.smallImageKey = string.Format("atk_summon");
                     RPControl.presence.smallImageText = string.Format("ATK: {0} (Summon)", atk);
-                    break;
+                }
             }
+        }
 
+        public static void GetBiome()
+        {
             if (zone1[3])
             {
                 RPControl.presence.largeImageKey = string.Format("biome_meteor");
@@ -137,7 +179,7 @@ namespace DiscordRP
             }
             else if (zone1[4])
             {
-                if (zone3[3]||zone3[2])
+                if (zone3[3] || zone3[2])
                 {
                     RPControl.presence.largeImageKey = string.Format("biome_ujungle");
                     RPControl.presence.largeImageText = string.Format("Underground Jungle");
@@ -181,7 +223,105 @@ namespace DiscordRP
                 RPControl.presence.largeImageKey = string.Format("biome_forest");
                 RPControl.presence.largeImageText = string.Format("Forest");
             }
+        }
 
+        public static void GetBoss()
+        {
+            switch (bossNPC.type)
+            {
+                case (50):
+                    RPControl.presence.largeImageKey = string.Format("boss_kingslime");
+                    RPControl.presence.largeImageText = string.Format("King Slime");
+                    break;
+                case (4):
+                    RPControl.presence.largeImageKey = string.Format("boss_eoc");
+                    RPControl.presence.largeImageText = string.Format("Eye of Cthulhu");
+                    break;
+                case (13):
+                case (14):
+                case (15):
+                    RPControl.presence.largeImageKey = string.Format("boss_eow");
+                    RPControl.presence.largeImageText = string.Format("Eater of Worlds");
+                    break;
+                case (266):
+                    RPControl.presence.largeImageKey = string.Format("boss_boc");
+                    RPControl.presence.largeImageText = string.Format("Brain of Cthulhu");
+                    break;
+                case (222):
+                    RPControl.presence.largeImageKey = string.Format("boss_queenbee");
+                    RPControl.presence.largeImageText = string.Format("Queen Bee");
+                    break;
+                case (35):
+                    RPControl.presence.largeImageKey = string.Format("boss_skeletron");
+                    RPControl.presence.largeImageText = string.Format("Skeletron");
+                    break;
+                case (113):
+                    RPControl.presence.largeImageKey = string.Format("boss_wof");
+                    RPControl.presence.largeImageText = string.Format("Wall of Flesh");
+                    break;
+                case (125):
+                case (126):
+                    RPControl.presence.largeImageKey = string.Format("boss_twins");
+                    RPControl.presence.largeImageText = string.Format("The Twins");
+                    break;
+                case (134):
+                    RPControl.presence.largeImageKey = string.Format("boss_destroyer");
+                    RPControl.presence.largeImageText = string.Format("The Destroyer");
+                    break;
+                case (127):
+                    RPControl.presence.largeImageKey = string.Format("boss_prime");
+                    RPControl.presence.largeImageText = string.Format("Skeletron Prime");
+                    break;
+                case (262):
+                    RPControl.presence.largeImageKey = string.Format("boss_plantera");
+                    RPControl.presence.largeImageText = string.Format("Plantera");
+                    break;
+                case (245):
+                    RPControl.presence.largeImageKey = string.Format("boss_golem");
+                    RPControl.presence.largeImageText = string.Format("Golem");
+                    break;
+                case (370):
+                    RPControl.presence.largeImageKey = string.Format("boss_fishron");
+                    RPControl.presence.largeImageText = string.Format("Duke Fishron");
+                    break;
+                case (439):
+                    RPControl.presence.largeImageKey = string.Format("boss_lunatic");
+                    RPControl.presence.largeImageText = string.Format("Lunatic Cultist");
+                    break;
+                case (396):
+                case (397):
+                case (398):
+                    RPControl.presence.largeImageKey = string.Format("boss_moonlord");
+                    RPControl.presence.largeImageText = string.Format("Moon Lord");
+                    break;
+                default:
+                    GetBiome();
+                    break;
+            };
+        }
+
+        public static void Update()
+        {
+            life = player.statLife;
+            mana = player.statMana;
+            def = player.statDefense;
+
+            zone1 = player.zone1;
+            zone2 = player.zone2;
+            zone3 = player.zone3;
+
+            item = player.HeldItem;
+
+            RPControl.presence.state = string.Format("HP: {0} MP: {1} DEF: {2}", life, mana, def);
+
+            GetItemStat();
+
+            bossNPC = Main.npc.Take(200).Where(npc => npc.active && (bossID.Contains(npc.type) || npc.boss)).LastOrDefault();
+
+            if (bossNPC == null)
+                GetBiome();
+            else
+                GetBoss();
 
             RPControl.Update();
         }
