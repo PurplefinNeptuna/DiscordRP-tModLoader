@@ -6,7 +6,7 @@ Discord Rich Presence for Terraria tModLoader
 Show your in-game activities to your DIscord status using Discord Rich Presence
 
 Displayed info:
-- Player current biome
+- Player current biome / Current encontered boss
 - Weapon damage (with type)
 - World name and difficulty (Normal/Expert)
 - Health, Mana, Defense
@@ -21,3 +21,5 @@ Some Screenshots:
 ![In Game L](https://s5.postimg.org/qf18x4mfb/gambar.png)
 
 ![In Game S](https://s5.postimg.org/9d8evfs93/gambar.png)
+
+![Boss](https://s5.postimg.org/e3uyr62w7/gambar.png)
