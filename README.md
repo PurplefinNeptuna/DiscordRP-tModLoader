@@ -23,3 +23,5 @@ Some Screenshots:
 ![In Game S](https://s5.postimg.org/9d8evfs93/gambar.png)
 
 ![Boss](https://s5.postimg.org/e3uyr62w7/gambar.png)
+
+![Dead](https://s5.postimg.org/gcsj5pit3/gambar.png)
