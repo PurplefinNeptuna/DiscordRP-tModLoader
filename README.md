@@ -9,7 +9,7 @@ Displayed info:
 - Player current biome / Current encontered boss
 - Weapon damage (with type)
 - World name and difficulty (Normal/Expert)
-- Health, Mana, Defense
+- Health, Mana, Defense (or just "Dead")
 - Play time
 
 Some Screenshots:
