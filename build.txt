@@ -1,7 +1,7 @@
 author = Purplefin Neptuna
-version = 0.6.1.1
+version = 0.6.1.3
 displayName = Discord Rich Presence
-homepage = https://forums.terraria.org/index.php?threads/neptunas-mod-collection.66112/
+homepage = https://forums.terraria.org/index.php?threads/discordrp-rich-presence-for-terraria.66146
 includeSource = true
 dllReferences = drpc
 buildIgnore = *.git, *.csproj, *.user, *.sln, *.exe, .vs/*, bin/*, obj/*	

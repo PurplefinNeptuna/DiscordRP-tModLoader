@@ -7,6 +7,7 @@ namespace DiscordRP
 	public class MainMod : Mod
 	{
 		public static uint? prevCount;
+		public static bool pauseUpdate = false;
 		public static void UpdaterLoad()
 		{
 			Main.OnTick += RPUpdate;
@@ -67,12 +68,20 @@ namespace DiscordRP
 			if (!Main.dedServ && !Main.gameMenu)
 			{
 				Player RPlayer = Main.player[Main.myPlayer];
-				if (prevCount == null || prevCount + 180 <= Main.GameUpdateCount || Main.gamePaused)
+				if ((prevCount == null || prevCount + 180 <= Main.GameUpdateCount) || (Main.gamePaused && !pauseUpdate))
 				{
+					if (Main.gamePaused)
+					{
+						pauseUpdate = true;
+					}
 					prevCount = Main.GameUpdateCount;
 					//Main.NewText(prevCount);
 					RPUtility.player = RPlayer;
 					RPUtility.Update();
+				}
+				else if (!Main.gamePaused)
+				{
+					pauseUpdate = false;
 				}
 				else return;
 			}
