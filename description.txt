@@ -1,8 +1,10 @@
-==NOW WORKING PROPERLY==
+==ONLY WORK FOR WINDOWS==
 This mod add a little extra detail of your ingame terraria activity to your discord status.
 
 Displayed info:
 - Player current biome / Current encountered boss
+- Day/Night
+- Weapon name
 - Weapon damage (with type)
 - World name and difficulty (Normal/Expert)
 - Health, Mana, Defense (or just "Dead")

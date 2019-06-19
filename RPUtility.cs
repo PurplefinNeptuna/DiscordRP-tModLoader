@@ -65,31 +65,31 @@ namespace DiscordRP
 				{
 					atk = (int)Math.Ceiling(item.damage * player.meleeDamage);
 					RPControl.presence.smallImageKey = string.Format("atk_melee");
-					RPControl.presence.smallImageText = string.Format("ATK: {0} (Melee)", atk);
+					RPControl.presence.smallImageText = string.Format("{0} ({1} Melee)", item.Name, atk);
 				}
 				else if (item.ranged)
 				{
 					atk = (int)Math.Ceiling(item.damage * player.rangedDamage);
 					RPControl.presence.smallImageKey = string.Format("atk_range");
-					RPControl.presence.smallImageText = string.Format("ATK: {0} (Ranged)", atk);
+					RPControl.presence.smallImageText = string.Format("{0} ({1} Ranged)", item.Name, atk);
 				}
 				else if (item.magic)
 				{
 					atk = (int)Math.Ceiling(item.damage * player.magicDamage);
 					RPControl.presence.smallImageKey = string.Format("atk_magic");
-					RPControl.presence.smallImageText = string.Format("ATK: {0} (Magic)", atk);
+					RPControl.presence.smallImageText = string.Format("{0} ({1} Magic)", item.Name, atk);
 				}
 				else if (item.thrown)
 				{
 					atk = (int)Math.Ceiling(item.damage * player.thrownDamage);
 					RPControl.presence.smallImageKey = string.Format("atk_throw");
-					RPControl.presence.smallImageText = string.Format("ATK: {0} (Thrown)", atk);
+					RPControl.presence.smallImageText = string.Format("{0} ({1} Thrown)", item.Name, atk);
 				}
 				else if (item.summon)
 				{
 					atk = (int)Math.Ceiling(item.damage * player.minionDamage);
 					RPControl.presence.smallImageKey = string.Format("atk_summon");
-					RPControl.presence.smallImageText = string.Format("ATK: {0} (Summon)", atk);
+					RPControl.presence.smallImageText = string.Format("{0} ({1} Summon)", item.Name, atk);
 				}
 			}
 		}
@@ -99,29 +99,29 @@ namespace DiscordRP
 			if (zone1[3])
 			{
 				RPControl.presence.largeImageKey = string.Format("biome_meteor");
-				RPControl.presence.largeImageText = string.Format("Meteor");
+				RPControl.presence.largeImageText = string.Format("Meteor ({0})", Main.dayTime ? "Day" : "Night");
 			}
 			else if (zone3[4])
 			{
 				RPControl.presence.largeImageKey = string.Format("biome_hell");
-				RPControl.presence.largeImageText = string.Format("Underworld");
+				RPControl.presence.largeImageText = string.Format("Underworld ({0})", Main.dayTime ? "Day" : "Night");
 			}
 			else if (zone3[0])
 			{
 				RPControl.presence.largeImageKey = string.Format("biome_sky");
-				RPControl.presence.largeImageText = string.Format("Space");
+				RPControl.presence.largeImageText = string.Format("Space ({0})", Main.dayTime ? "Day" : "Night");
 			}
 			else if (zone1[6])
 			{
 				if (zone3[3])
 				{
 					RPControl.presence.largeImageKey = string.Format("biome_ucrimson");
-					RPControl.presence.largeImageText = string.Format("Underground Crimson");
+					RPControl.presence.largeImageText = string.Format("Underground Crimson ({0})", Main.dayTime ? "Day" : "Night");
 				}
 				else
 				{
 					RPControl.presence.largeImageKey = string.Format("biome_crimson");
-					RPControl.presence.largeImageText = string.Format("Crimson");
+					RPControl.presence.largeImageText = string.Format("Crimson ({0})", Main.dayTime ? "Day" : "Night");
 				}
 			}
 			else if (zone1[1])
@@ -129,12 +129,12 @@ namespace DiscordRP
 				if (zone3[3])
 				{
 					RPControl.presence.largeImageKey = string.Format("biome_ucorrupt");
-					RPControl.presence.largeImageText = string.Format("Underground Corruption");
+					RPControl.presence.largeImageText = string.Format("Underground Corruption ({0})", Main.dayTime ? "Day" : "Night");
 				}
 				else
 				{
 					RPControl.presence.largeImageKey = string.Format("biome_corrupt");
-					RPControl.presence.largeImageText = string.Format("Corruption");
+					RPControl.presence.largeImageText = string.Format("Corruption ({0})", Main.dayTime ? "Day" : "Night");
 				}
 			}
 			else if (zone1[2])
@@ -142,53 +142,53 @@ namespace DiscordRP
 				if (zone3[3])
 				{
 					RPControl.presence.largeImageKey = string.Format("biome_uholy");
-					RPControl.presence.largeImageText = string.Format("Underground Hollow");
+					RPControl.presence.largeImageText = string.Format("Underground Hollow ({0})", Main.dayTime ? "Day" : "Night");
 				}
 				else
 				{
 					RPControl.presence.largeImageKey = string.Format("biome_holy");
-					RPControl.presence.largeImageText = string.Format("Hollow");
+					RPControl.presence.largeImageText = string.Format("Hollow ({0})", Main.dayTime ? "Day" : "Night");
 				}
 			}
 			else if (zone1[0])
 			{
 				RPControl.presence.largeImageKey = string.Format("biome_dungeon");
-				RPControl.presence.largeImageText = string.Format("Dungeon");
+				RPControl.presence.largeImageText = string.Format("Dungeon ({0})", Main.dayTime ? "Day" : "Night");
 			}
 			else if (zone1[5])
 			{
 				if (zone3[3])
 				{
 					RPControl.presence.largeImageKey = string.Format("biome_usnow");
-					RPControl.presence.largeImageText = string.Format("Underground Snow");
+					RPControl.presence.largeImageText = string.Format("Underground Snow ({0})", Main.dayTime ? "Day" : "Night");
 				}
 				else
 				{
 					RPControl.presence.largeImageKey = string.Format("biome_snow");
-					RPControl.presence.largeImageText = string.Format("Snow");
+					RPControl.presence.largeImageText = string.Format("Snow ({0})", Main.dayTime ? "Day" : "Night");
 				}
 			}
 			else if (zone2[7])
 			{
 				RPControl.presence.largeImageKey = string.Format("biome_udesert");
-				RPControl.presence.largeImageText = string.Format("Underground Desert");
+				RPControl.presence.largeImageText = string.Format("Underground Desert ({0})", Main.dayTime ? "Day" : "Night");
 			}
 			else if (zone2[5])
 			{
 				RPControl.presence.largeImageKey = string.Format("biome_desert");
-				RPControl.presence.largeImageText = string.Format("Desert");
+				RPControl.presence.largeImageText = string.Format("Desert ({0})", Main.dayTime ? "Day" : "Night");
 			}
 			else if (zone1[4])
 			{
 				if (zone3[3] || zone3[2])
 				{
 					RPControl.presence.largeImageKey = string.Format("biome_ujungle");
-					RPControl.presence.largeImageText = string.Format("Underground Jungle");
+					RPControl.presence.largeImageText = string.Format("Underground Jungle ({0})", Main.dayTime ? "Day" : "Night");
 				}
 				else
 				{
 					RPControl.presence.largeImageKey = string.Format("biome_jungle");
-					RPControl.presence.largeImageText = string.Format("Jungle");
+					RPControl.presence.largeImageText = string.Format("Jungle ({0})", Main.dayTime ? "Day" : "Night");
 				}
 			}
 			else if (zone2[6])
@@ -196,33 +196,33 @@ namespace DiscordRP
 				if (zone3[3] || zone3[2])
 				{
 					RPControl.presence.largeImageKey = string.Format("biome_umushroom");
-					RPControl.presence.largeImageText = string.Format("Underground Mushroom");
+					RPControl.presence.largeImageText = string.Format("Underground Mushroom ({0})", Main.dayTime ? "Day" : "Night");
 				}
 				else
 				{
 					RPControl.presence.largeImageKey = string.Format("biome_mushroom");
-					RPControl.presence.largeImageText = string.Format("Mushroom");
+					RPControl.presence.largeImageText = string.Format("Mushroom ({0})", Main.dayTime ? "Day" : "Night");
 				}
 			}
 			else if (zone3[5])
 			{
 				RPControl.presence.largeImageKey = string.Format("biome_ocean");
-				RPControl.presence.largeImageText = string.Format("Ocean");
+				RPControl.presence.largeImageText = string.Format("Ocean ({0})", Main.dayTime ? "Day" : "Night");
 			}
 			else if (zone3[3])
 			{
 				RPControl.presence.largeImageKey = string.Format("biome_cavern");
-				RPControl.presence.largeImageText = string.Format("Cavern");
+				RPControl.presence.largeImageText = string.Format("Cavern ({0})", Main.dayTime ? "Day" : "Night");
 			}
 			else if (zone3[2])
 			{
 				RPControl.presence.largeImageKey = string.Format("biome_underground");
-				RPControl.presence.largeImageText = string.Format("Underground");
+				RPControl.presence.largeImageText = string.Format("Underground ({0})", Main.dayTime ? "Day" : "Night");
 			}
 			else
 			{
 				RPControl.presence.largeImageKey = string.Format("biome_forest");
-				RPControl.presence.largeImageText = string.Format("Forest");
+				RPControl.presence.largeImageText = string.Format("Forest ({0})", Main.dayTime ? "Day" : "Night");
 			}
 		}
 
