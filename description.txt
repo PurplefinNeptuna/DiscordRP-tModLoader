@@ -1,4 +1,3 @@
-==ONLY WORK FOR WINDOWS==
 This mod add a little extra detail of your ingame terraria activity to your discord status.
 
 Displayed info:

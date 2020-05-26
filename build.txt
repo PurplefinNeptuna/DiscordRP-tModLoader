@@ -1,8 +1,8 @@
 author = Purplefin Neptuna
-version = 0.6.2.1
+version = 0.7.1
 displayName = Discord Rich Presence
 homepage = https://forums.terraria.org/index.php?threads/discordrp-rich-presence-for-terraria.66146
 includeSource = true
-dllReferences = drpc
-buildIgnore = *.git, *.csproj, *.user, *.sln, *.exe, .vs/*, bin/*, obj/*	
+dllReferences = DiscordRPC
+buildIgnore = *.git, *.csproj, *.user, *.sln, *.exe, .vs/*, bin/*, obj/*
 side = Client
