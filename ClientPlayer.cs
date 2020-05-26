@@ -1,10 +1,6 @@
-﻿using DiscordRPC;
-using Steamworks;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
@@ -67,7 +63,7 @@ namespace DiscordRP {
 		private void ClientUpdate() {
 			NPC bossNPC = Main.npc.Take(200).Where(npc => npc.active && (bossID.Contains(npc.type) || npc.boss)).LastOrDefault();
 			(string itemKey, string itemText) = GetItemStat();
-			(string bigKey, string bigText) = (bossNPC==null) ? GetBiome(player.zone1, player.zone2, player.zone3) : GetBoss(bossNPC.type);
+			(string bigKey, string bigText) = (bossNPC == null) ? GetBiome(player.zone1, player.zone2, player.zone3) : GetBoss(bossNPC.type);
 
 			string state;
 			if(!dead) {
@@ -311,7 +307,7 @@ namespace DiscordRP {
 					break;
 			};
 
-			return (largeImageKey,largeImageText);
+			return (largeImageKey, largeImageText);
 		}
 	}
 }
