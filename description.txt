@@ -8,3 +8,11 @@ Displayed info:
 - World name and difficulty (Normal/Expert)
 - Health, Mana, Defense (or just "Dead")
 - Play time
+
+Developers can use modcall to add mod boss and biome to Rich Presence.
+
+Rich Presence assets can only be added by the owner (Me),
+so you can contact me on Discord (tModLoader) to putting your asset to Rich Presence.
+
+Because the assets storage is limited, I might remove less popular mod's asset in
+favor of more popular mod.

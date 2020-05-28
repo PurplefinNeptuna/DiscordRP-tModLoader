@@ -4,25 +4,49 @@ using Terraria.Social;
 using Terraria.Net;
 using Terraria.ModLoader;
 using System;
+using System.Collections.Generic;
 using Steamworks;
 
 namespace DiscordRP {
+
+	internal class DRPStatus {
+		public string details = "", additionalDetails = "";
+		public string largeKey = "", largeImage = "";
+		public string smallKey = "", smallImage = "";
+		public string GetState() => additionalDetails;
+		public string GetDetails() => details;
+	}
+
+	internal class BiomeStatus {
+		public Func<bool> checker = null;
+		public string largeKey = "biome_placeholder";
+		public string largeText = "???";
+	}
+
 	public class DiscordRP : Mod {
 
 		//Mod Helper Issues report
 		public static string GithubUserName => "PurplefinNeptuna";
 		public static string GithubProjectName => "DiscordRP-tModLoader";
 
-		public static DiscordRpcClient Client {
+		internal static DiscordRpcClient Client {
 			get; private set;
 		}
 
-		public static RichPresence Instance {
+		internal static RichPresence Instance {
 			get; private set;
 		}
 
-		public static uint? prevCount;
-		public static bool pauseUpdate = false;
+		internal static uint? prevCount;
+		internal static bool pauseUpdate = false;
+
+		internal static List<int> bossID = new List<int>();
+
+		internal static Dictionary<int, (string, string)> exBossIDtoDetails = new Dictionary<int, (string, string)>();
+
+		internal static DRPStatus customStatus = null;
+
+		internal static List<BiomeStatus> exBiomeStatus = new List<BiomeStatus>();
 
 		public DiscordRP() {
 			Properties = new ModProperties() {
@@ -34,6 +58,25 @@ namespace DiscordRP {
 		}
 
 		public override void Load() {
+			exBiomeStatus = new List<BiomeStatus>();
+			exBossIDtoDetails = new Dictionary<int, (string, string)>();
+			bossID = new List<int>() {
+			50,
+			4,
+			13,14,15,
+			266,
+			222,
+			35,
+			113,
+			125,126,
+			134,
+			127,
+			262,
+			245,
+			370,
+			439,
+			396,397,398
+		};
 			Instance = new RichPresence {
 				Secrets = new Secrets()
 			};
@@ -57,7 +100,9 @@ namespace DiscordRP {
 
 			Client.Initialize();
 			Instance.Timestamps = Timestamps.Now;
+		}
 
+		public override void AddRecipes() {
 			ClientOnMainMenu();
 		}
 
@@ -71,7 +116,15 @@ namespace DiscordRP {
 		}
 
 		private void ClientOnMainMenu() {
-			ClientSetStatus("", "In Main Menu", "payload_test", "tModLoader");
+			if(customStatus == null) {
+				ClientSetStatus("", "In Main Menu", "payload_test", "tModLoader");
+			}
+			else {
+				ClientSetStatus(customStatus.GetState(), customStatus.GetDetails(),
+				customStatus.largeKey, customStatus.largeImage,
+				customStatus.smallKey, customStatus.smallImage);
+			}
+
 			ClientSetParty();
 			Client.SetPresence(Instance);
 		}
@@ -125,7 +178,7 @@ namespace DiscordRP {
 		}
 
 		public static void ClientUpdate() {
-			if(!Main.dedServ && !Main.gameMenu) {
+			if(!Main.gameMenu) {
 				if(Main.gamePaused || Main.gameInactive) {
 					pauseUpdate = true;
 				}
@@ -135,8 +188,7 @@ namespace DiscordRP {
 
 				if((prevCount == null || prevCount + 180 <= Main.GameUpdateCount) && !pauseUpdate) {
 					prevCount = Main.GameUpdateCount;
-					Client.SetPresence(Instance);
-					Client.Invoke();
+					ClientForceUpdate();
 				}
 			}
 		}
@@ -147,6 +199,15 @@ namespace DiscordRP {
 			Instance = null;
 			Client = null;
 			prevCount = null;
+			bossID = null;
+			exBossIDtoDetails = null;
+			customStatus = null;
+			exBiomeStatus = null;
 		}
+
+		public override object Call(params object[] args) {
+			return DRPX.Call(args);
+		}
+
 	}
 }
