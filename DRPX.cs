@@ -28,6 +28,10 @@ namespace DiscordRP {
 		/// <param name="ids">NPC id</param>
 		/// <param name="imageKey">image key, and image name</param>
 		public static void AddBoss(List<int> ids, (string, string) imageKey) {
+			if(ids == null)
+				return;
+
+			imageKey.Item2 = "Fighting " + imageKey.Item2;
 			foreach(int id in ids) {
 				if(imageKey.Item1 == null || imageKey.Item1 == "") {
 					imageKey.Item1 = "boss_placeholder";
@@ -112,7 +116,7 @@ namespace DiscordRP {
 			if(DiscordRP.exBiomeStatus != null || DiscordRP.exBiomeStatus?.Count > 0) {
 				foreach(BiomeStatus biome in DiscordRP.exBiomeStatus) {
 					if(biome.checker()) {
-						return (biome.largeKey, biome.largeText);
+						return (biome.largeKey, "In " + biome.largeText);
 					}
 				}
 			}
@@ -218,6 +222,7 @@ namespace DiscordRP {
 				largeImageText = string.Format("Forest ({0})", Main.dayTime ? "Day" : "Night");
 			}
 
+			largeImageText = "In " + largeImageText;
 			return (largeImageKey, largeImageText);
 		}
 
@@ -233,10 +238,13 @@ namespace DiscordRP {
 				}
 			}
 
+			bool getVanillaBoss = true;
 			if(DiscordRP.bossID != null || DiscordRP.bossID?.Count > 0) {
 				NPC bossNPC = Main.npc?.Take(200).Where(npc => npc.active && (DiscordRP.bossID.Contains(npc.type) || npc.boss)).LastOrDefault();
-				if(bossNPC == null)
+				if(bossNPC == null) {
+					getVanillaBoss = false;
 					return GetBiome(zone1, zone2, zone3);
+				}
 				switch(bossNPC.type) {
 					case (50):
 						largeImageKey = string.Format("boss_kingslime");
@@ -304,9 +312,14 @@ namespace DiscordRP {
 						largeImageText = string.Format("Moon Lord");
 						break;
 					default:
+						getVanillaBoss = false;
 						(largeImageKey, largeImageText) = GetBiome(zone1, zone2, zone3);
 						break;
 				};
+			}
+
+			if(getVanillaBoss) {
+				largeImageText = "Fighting " + largeImageText;
 			}
 
 			return (largeImageKey, largeImageText);

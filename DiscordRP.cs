@@ -48,6 +48,8 @@ namespace DiscordRP {
 
 		internal static List<BiomeStatus> exBiomeStatus = new List<BiomeStatus>();
 
+		internal static string worldStaticInfo = null;
+
 		public DiscordRP() {
 			Properties = new ModProperties() {
 				Autoload = true,
@@ -188,6 +190,9 @@ namespace DiscordRP {
 
 				if((prevCount == null || prevCount + 180 <= Main.GameUpdateCount) && !pauseUpdate) {
 					prevCount = Main.GameUpdateCount;
+					if(Main.LocalPlayer != null) {
+						ClientUpdatePlayer();
+					}
 					ClientForceUpdate();
 				}
 			}
@@ -203,11 +208,68 @@ namespace DiscordRP {
 			exBossIDtoDetails = null;
 			customStatus = null;
 			exBiomeStatus = null;
+			worldStaticInfo = null;
 		}
 
 		public override object Call(params object[] args) {
 			return DRPX.Call(args);
 		}
 
+		internal static void UpdateLobbyInfo() {
+			if(Main.LobbyId != 0UL) {
+				//string sId = SteamUser.GetSteamID().ToString();
+				ClientSetParty(null, Main.LocalPlayer.name, Main.ActivePlayersCount);
+			}
+		}
+
+		internal static void ClientUpdatePlayer() {
+			if(Main.LocalPlayer != null) {
+				(string itemKey, string itemText) = GetItemStat();
+				(string bigKey, string bigText) = DRPX.GetBoss(Main.LocalPlayer.zone1, Main.LocalPlayer.zone2, Main.LocalPlayer.zone3);
+
+				string state;
+				if(!Main.LocalPlayer.GetModPlayer<ClientPlayer>().dead) {
+					state = string.Format("HP: {0} MP: {1} DEF: {2}", Main.LocalPlayer.statLife, Main.LocalPlayer.statMana, Main.LocalPlayer.statDefense);
+				}
+				else {
+					state = string.Format("Dead");
+				}
+
+				//DiscordRP.ClientSetStatus(state, worldStaticInfo, bigKey, bigText, itemKey, itemText);
+				ClientSetStatus(state, bigText, bigKey, worldStaticInfo, itemKey, itemText);
+				UpdateLobbyInfo();
+
+				if(Main.LocalPlayer.GetModPlayer<ClientPlayer>().dead)
+					ClientForceUpdate();
+			}
+		}
+
+		internal static (string, string) GetItemStat() {
+			int atk;
+			Item item = Main.LocalPlayer.HeldItem;
+			if(item != null) {
+				if(item.melee) {
+					atk = (int)Math.Ceiling(item.damage * Main.LocalPlayer.meleeDamage);
+					return (string.Format("atk_melee"), string.Format("{0} ({1} Melee)", item.Name, atk));
+				}
+				else if(item.ranged) {
+					atk = (int)Math.Ceiling(item.damage * Main.LocalPlayer.rangedDamage);
+					return (string.Format("atk_range"), string.Format("{0} ({1} Ranged)", item.Name, atk));
+				}
+				else if(item.magic) {
+					atk = (int)Math.Ceiling(item.damage * Main.LocalPlayer.magicDamage);
+					return (string.Format("atk_magic"), string.Format("{0} ({1} Magic)", item.Name, atk));
+				}
+				else if(item.thrown) {
+					atk = (int)Math.Ceiling(item.damage * Main.LocalPlayer.thrownDamage);
+					return (string.Format("atk_throw"), string.Format("{0} ({1} Thrown)", item.Name, atk));
+				}
+				else if(item.summon) {
+					atk = (int)Math.Ceiling(item.damage * Main.LocalPlayer.minionDamage);
+					return (string.Format("atk_summon"), string.Format("{0} ({1} Summon)", item.Name, atk));
+				}
+			}
+			return (null, null);
+		}
 	}
 }
