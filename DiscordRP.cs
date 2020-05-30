@@ -3,6 +3,7 @@ using Terraria;
 using Terraria.Social;
 using Terraria.Net;
 using Terraria.ModLoader;
+using Terraria.GameContent.Events;
 using System;
 using System.Collections.Generic;
 using Steamworks;
@@ -40,15 +41,16 @@ namespace DiscordRP {
 		internal static uint? prevCount;
 		internal static bool pauseUpdate = false;
 
-		internal static List<int> bossID = new List<int>();
-
-		internal static Dictionary<int, (string, string)> exBossIDtoDetails = new Dictionary<int, (string, string)>();
+		internal static Dictionary<int, (string, string, int)> exBossIDtoDetails = new Dictionary<int, (string, string, int)>();
 
 		internal static DRPStatus customStatus = null;
 
 		internal static List<BiomeStatus> exBiomeStatus = new List<BiomeStatus>();
 
 		internal static string worldStaticInfo = null;
+
+		internal static bool PartyEvent => BirthdayParty.PartyIsUp;
+		internal static bool SandstormEvent => Sandstorm.Happening;
 
 		public DiscordRP() {
 			Properties = new ModProperties() {
@@ -60,25 +62,9 @@ namespace DiscordRP {
 		}
 
 		public override void Load() {
+			pauseUpdate = false;
 			exBiomeStatus = new List<BiomeStatus>();
-			exBossIDtoDetails = new Dictionary<int, (string, string)>();
-			bossID = new List<int>() {
-			50,
-			4,
-			13,14,15,
-			266,
-			222,
-			35,
-			113,
-			125,126,
-			134,
-			127,
-			262,
-			245,
-			370,
-			439,
-			396,397,398
-		};
+			exBossIDtoDetails = new Dictionary<int, (string, string, int)>();
 			Instance = new RichPresence {
 				Secrets = new Secrets()
 			};
@@ -106,6 +92,7 @@ namespace DiscordRP {
 
 		public override void AddRecipes() {
 			ClientOnMainMenu();
+			DRPX.AddVanillaBosses();
 		}
 
 		private void ClientOnJoin(object sender, DiscordRPC.Message.JoinMessage args) {
@@ -118,6 +105,7 @@ namespace DiscordRP {
 		}
 
 		private void ClientOnMainMenu() {
+			pauseUpdate = false;
 			if(customStatus == null) {
 				ClientSetStatus("", "In Main Menu", "payload_test", "tModLoader");
 			}
@@ -204,7 +192,6 @@ namespace DiscordRP {
 			Instance = null;
 			Client = null;
 			prevCount = null;
-			bossID = null;
 			exBossIDtoDetails = null;
 			customStatus = null;
 			exBiomeStatus = null;
@@ -246,7 +233,7 @@ namespace DiscordRP {
 
 		internal static (string, string) GetItemStat() {
 			int atk;
-			Item item = Main.LocalPlayer.HeldItem;
+			Item item = Main.LocalPlayer?.HeldItem;
 			if(item != null) {
 				if(item.melee) {
 					atk = (int)Math.Ceiling(item.damage * Main.LocalPlayer.meleeDamage);

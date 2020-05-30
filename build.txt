@@ -1,5 +1,5 @@
 author = Purplefin Neptuna
-version = 0.8.3
+version = 0.9.1
 displayName = Discord Rich Presence
 homepage = https://forums.terraria.org/index.php?threads/discordrp-rich-presence-for-terraria.66146
 includeSource = true

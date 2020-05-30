@@ -13,6 +13,7 @@ namespace DiscordRP {
 		public override void OnEnterWorld(Player player) {
 			if(player.whoAmI == Main.myPlayer) {
 				if(DiscordRP.Client.IsInitialized) {
+					DiscordRP.pauseUpdate = false;
 					string wName = Main.worldName;
 					bool expert = Main.expertMode;
 					string wDiff = (expert) ? "(Expert)" : "(Normal)";

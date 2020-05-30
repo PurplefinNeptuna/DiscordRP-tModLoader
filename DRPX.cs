@@ -4,12 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 
 namespace DiscordRP {
 	public static class DRPX {
 		public static List<int> ObjectToListInt(object data) => data is List<int> ? data as List<int> : (data is int ? new List<int>() { Convert.ToInt32(data) } : null);
+		public static int ObjectToInt(object data, int def) => data is int ? (int)data : def;
 
 		public static void NewMenuStatus(string details, string additionalDetails, (string, string) largeImage, (string, string) smallImage) {
 			DiscordRP.customStatus = new DRPStatus() {
@@ -25,19 +27,19 @@ namespace DiscordRP {
 		/// <summary>
 		/// Add Bosses to Discord Rich Presence
 		/// </summary>
-		/// <param name="ids">NPC id</param>
+		/// <param name="ids">NPC id list</param>
 		/// <param name="imageKey">image key, and image name</param>
-		public static void AddBoss(List<int> ids, (string, string) imageKey) {
+		public static void AddBoss(List<int> ids, (string, string) imageKey, int priority = 250) {
 			if(ids == null)
 				return;
 
-			imageKey.Item2 = "Fighting " + imageKey.Item2;
+			//imageKey.Item2 = "Fighting " + imageKey.Item2;
 			foreach(int id in ids) {
 				if(imageKey.Item1 == null || imageKey.Item1 == "") {
 					imageKey.Item1 = "boss_placeholder";
 				}
 				if(DiscordRP.exBossIDtoDetails != null || DiscordRP.exBossIDtoDetails?.Count > 0) {
-					DiscordRP.exBossIDtoDetails.Add(id, imageKey);
+					DiscordRP.exBossIDtoDetails.Add(id, (imageKey.Item1, imageKey.Item2, priority));
 				}
 				else {
 					Main.NewText("Failed to add boss custom status info, report to Purplefin Neptuna", Color.Red);
@@ -52,9 +54,8 @@ namespace DiscordRP {
 		/// <param name="imageKey"></param>
 		public static void AddBiome(Func<bool> checker, (string, string) imageKey) {
 			if(imageKey.Item1 == null || imageKey.Item1 == "") {
-				imageKey.Item1 = "boss_placeholder";
+				imageKey.Item1 = "biome_placeholder";
 			}
-			//DiscordRP.exBossIDtoDetails.Add(id, imageKey);
 			if(DiscordRP.exBiomeStatus != null || DiscordRP.exBiomeStatus?.Count > 0) {
 				DiscordRP.exBiomeStatus.Add(new BiomeStatus() { checker = checker, largeKey = imageKey.Item1, largeText = imageKey.Item2 });
 			}
@@ -73,11 +74,13 @@ namespace DiscordRP {
 			try {
 				string message = args[0] as string;
 				switch(message) {
-					//e.g Call("AddBoss", List<int>Id, "Angry Slimey", "boss_placeholder")
+					//e.g Call("AddBoss", List<int>Id, "Angry Slimey", "boss_placeholder", int default:250)
 					case "AddBoss": {
 						List<int> Id = ObjectToListInt(args[1]);
 						(string, string) ImageKey = (args[3] as string, args[2] as string);
-						AddBoss(Id, ImageKey);
+						int priority = ObjectToInt(args[4], 250);
+						//int priority = args[4] is int ? (int)args[4] : 250;
+						AddBoss(Id, ImageKey, priority);
 						return "Success";
 					}
 
@@ -230,99 +233,83 @@ namespace DiscordRP {
 			string largeImageKey = null;
 			string largeImageText = null;
 
+			bool getAnyBosses = false;
 			//Main.NewText(DiscordRP.exBossIDtoDetails.Count);
 			if(DiscordRP.exBossIDtoDetails != null || DiscordRP.exBossIDtoDetails?.Count > 0) {
-				NPC bossNPCExtra = Main.npc?.Take(200).Where(npc => npc.active && DiscordRP.exBossIDtoDetails.ContainsKey(npc.type)).LastOrDefault();
-				if(bossNPCExtra != null) {
-					return DiscordRP.exBossIDtoDetails[bossNPCExtra.type];
+				//new way with sort support
+				int lastHighestPriority = -1;
+				List<int> bossNPCs = Main.npc?.Take(200).Where(npc => npc.active && DiscordRP.exBossIDtoDetails.ContainsKey(npc.type)).Select(x => x.type).ToList();
+				foreach(int bossType in bossNPCs) {
+					(string, string, int) details = DiscordRP.exBossIDtoDetails[bossType];
+					if(details.Item3 >= lastHighestPriority) {
+						getAnyBosses = true;
+						(largeImageKey, largeImageText, _) = details;
+						lastHighestPriority = details.Item3;
+					}
 				}
 			}
 
-			bool getVanillaBoss = true;
-			if(DiscordRP.bossID != null || DiscordRP.bossID?.Count > 0) {
-				NPC bossNPC = Main.npc?.Take(200).Where(npc => npc.active && (DiscordRP.bossID.Contains(npc.type) || npc.boss)).LastOrDefault();
-				if(bossNPC == null) {
-					getVanillaBoss = false;
-					return GetBiome(zone1, zone2, zone3);
-				}
-				switch(bossNPC.type) {
-					case (50):
-						largeImageKey = string.Format("boss_kingslime");
-						largeImageText = string.Format("King Slime");
-						break;
-					case (4):
-						largeImageKey = string.Format("boss_eoc");
-						largeImageText = string.Format("Eye of Cthulhu");
-						break;
-					case (13):
-					case (14):
-					case (15):
-						largeImageKey = string.Format("boss_eow");
-						largeImageText = string.Format("Eater of Worlds");
-						break;
-					case (266):
-						largeImageKey = string.Format("boss_boc");
-						largeImageText = string.Format("Brain of Cthulhu");
-						break;
-					case (222):
-						largeImageKey = string.Format("boss_queenbee");
-						largeImageText = string.Format("Queen Bee");
-						break;
-					case (35):
-						largeImageKey = string.Format("boss_skeletron");
-						largeImageText = string.Format("Skeletron");
-						break;
-					case (113):
-						largeImageKey = string.Format("boss_wof");
-						largeImageText = string.Format("Wall of Flesh");
-						break;
-					case (125):
-					case (126):
-						largeImageKey = string.Format("boss_twins");
-						largeImageText = string.Format("The Twins");
-						break;
-					case (134):
-						largeImageKey = string.Format("boss_destroyer");
-						largeImageText = string.Format("The Destroyer");
-						break;
-					case (127):
-						largeImageKey = string.Format("boss_prime");
-						largeImageText = string.Format("Skeletron Prime");
-						break;
-					case (262):
-						largeImageKey = string.Format("boss_plantera");
-						largeImageText = string.Format("Plantera");
-						break;
-					case (245):
-						largeImageKey = string.Format("boss_golem");
-						largeImageText = string.Format("Golem");
-						break;
-					case (370):
-						largeImageKey = string.Format("boss_fishron");
-						largeImageText = string.Format("Duke Fishron");
-						break;
-					case (439):
-						largeImageKey = string.Format("boss_lunatic");
-						largeImageText = string.Format("Lunatic Cultist");
-						break;
-					case (396):
-					case (397):
-					case (398):
-						largeImageKey = string.Format("boss_moonlord");
-						largeImageText = string.Format("Moon Lord");
-						break;
-					default:
-						getVanillaBoss = false;
-						(largeImageKey, largeImageText) = GetBiome(zone1, zone2, zone3);
-						break;
-				};
-			}
-
-			if(getVanillaBoss) {
+			if(getAnyBosses) {
 				largeImageText = "Fighting " + largeImageText;
 			}
-
+			else {
+				(largeImageKey, largeImageText) = GetBiome(zone1, zone2, zone3);
+			}
 			return (largeImageKey, largeImageText);
+		}
+
+		public static void AddVanillaBosses() {
+			AddBoss(new List<int>() {
+				NPCID.KingSlime
+			}, ("boss_kingslime", "King Slime"), 12);
+			AddBoss(new List<int>() {
+				NPCID.EyeofCthulhu
+			}, ("boss_eoc", "Eye of Cthulhu"), 25);
+			AddBoss(new List<int>() {
+				NPCID.EaterofWorldsHead,
+				NPCID.EaterofWorldsBody,
+				NPCID.EaterofWorldsTail
+			}, ("boss_eow", "Eater of Worlds"), 37);
+			AddBoss(new List<int>() {
+				NPCID.BrainofCthulhu
+			}, ("boss_boc", "Brain of Cthulhu"), 50);
+			AddBoss(new List<int>() {
+				NPCID.QueenBee
+			}, ("boss_queenbee", "Queen Bee"), 62);
+			AddBoss(new List<int>() {
+				NPCID.SkeletronHead
+			}, ("boss_skeletron", "Skeletron"), 75);
+			AddBoss(new List<int>() {
+				NPCID.WallofFlesh
+			}, ("boss_wof", "Wall of Flesh"), 100);
+			//hardmode
+			AddBoss(new List<int>() {
+				NPCID.Retinazer,
+				NPCID.Spazmatism
+			}, ("boss_twins", "The Twins"), 117);
+			AddBoss(new List<int>() {
+				NPCID.TheDestroyer
+			}, ("boss_destroyer", "The Destroyer"), 133);
+			AddBoss(new List<int>() {
+				NPCID.SkeletronPrime
+			}, ("boss_prime", "Skeleton Prime"), 150);
+			AddBoss(new List<int>() {
+				NPCID.Plantera
+			}, ("boss_plantera", "Plantera"), 167);
+			AddBoss(new List<int>() {
+				NPCID.Golem
+			}, ("boss_golem", "Golem"), 183);
+			AddBoss(new List<int>() {
+				NPCID.DukeFishron
+			}, ("boss_fishron", "Duke Fishron"), 200);
+			AddBoss(new List<int>() {
+				NPCID.CultistBoss
+			}, ("boss_lunatic", "Lunatic Cultist"), 217);
+			AddBoss(new List<int>() {
+				NPCID.MoonLordHead,
+				NPCID.MoonLordHand,
+				NPCID.MoonLordCore
+			}, ("boss_moonlord", "Moon Lord"), 233);
 		}
 	}
 }
