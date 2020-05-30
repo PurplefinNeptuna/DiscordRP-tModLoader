@@ -38,7 +38,7 @@ namespace DiscordRP {
 			get; private set;
 		}
 
-		internal static uint? prevCount;
+		internal static uint prevCount = 0;
 		internal static bool pauseUpdate = false;
 
 		internal static Dictionary<int, (string, string, int)> exBossIDtoDetails = new Dictionary<int, (string, string, int)>();
@@ -168,16 +168,16 @@ namespace DiscordRP {
 		}
 
 		public static void ClientUpdate() {
-			if(!Main.gameMenu) {
+			if(!Main.gameMenu && !Main.dedServ) {
 				if(Main.gamePaused || Main.gameInactive) {
 					pauseUpdate = true;
 				}
 				else {
+					prevCount++;
 					pauseUpdate = false;
 				}
 
-				if((prevCount == null || prevCount + 180 <= Main.GameUpdateCount) && !pauseUpdate) {
-					prevCount = Main.GameUpdateCount;
+				if((prevCount % 120u == 0) && !pauseUpdate) {
 					if(Main.LocalPlayer != null) {
 						ClientUpdatePlayer();
 					}
@@ -191,7 +191,6 @@ namespace DiscordRP {
 			Client.Dispose();
 			Instance = null;
 			Client = null;
-			prevCount = null;
 			exBossIDtoDetails = null;
 			customStatus = null;
 			exBiomeStatus = null;
