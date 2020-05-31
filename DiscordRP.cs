@@ -22,6 +22,7 @@ namespace DiscordRP {
 		public Func<bool> checker = null;
 		public string largeKey = "biome_placeholder";
 		public string largeText = "???";
+		public float priority = 0f;
 	}
 
 	public class DiscordRP : Mod {
@@ -41,7 +42,7 @@ namespace DiscordRP {
 		internal static uint prevCount = 0;
 		internal static bool pauseUpdate = false;
 
-		internal static Dictionary<int, (string, string, int)> exBossIDtoDetails = new Dictionary<int, (string, string, int)>();
+		internal static Dictionary<int, (string, string, float)> exBossIDtoDetails = new Dictionary<int, (string, string, float)>();
 
 		internal static DRPStatus customStatus = null;
 
@@ -64,7 +65,7 @@ namespace DiscordRP {
 		public override void Load() {
 			pauseUpdate = false;
 			exBiomeStatus = new List<BiomeStatus>();
-			exBossIDtoDetails = new Dictionary<int, (string, string, int)>();
+			exBossIDtoDetails = new Dictionary<int, (string, string, float)>();
 			Instance = new RichPresence {
 				Secrets = new Secrets()
 			};
@@ -93,6 +94,8 @@ namespace DiscordRP {
 		public override void AddRecipes() {
 			ClientOnMainMenu();
 			DRPX.AddVanillaBosses();
+			DRPX.AddVanillaBiomes();
+			DRPX.AddVanillaEvents();
 		}
 
 		private void ClientOnJoin(object sender, DiscordRPC.Message.JoinMessage args) {
@@ -178,9 +181,7 @@ namespace DiscordRP {
 				}
 
 				if((prevCount % 120u == 0) && !pauseUpdate) {
-					if(Main.LocalPlayer != null) {
-						ClientUpdatePlayer();
-					}
+					ClientUpdatePlayer();
 					ClientForceUpdate();
 				}
 			}
@@ -211,7 +212,7 @@ namespace DiscordRP {
 		internal static void ClientUpdatePlayer() {
 			if(Main.LocalPlayer != null) {
 				(string itemKey, string itemText) = GetItemStat();
-				(string bigKey, string bigText) = DRPX.GetBoss(Main.LocalPlayer.zone1, Main.LocalPlayer.zone2, Main.LocalPlayer.zone3);
+				(string bigKey, string bigText) = DRPX.GetBoss();
 
 				string state;
 				if(!Main.LocalPlayer.GetModPlayer<ClientPlayer>().dead) {

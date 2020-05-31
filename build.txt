@@ -1,6 +1,6 @@
 author = Purplefin Neptuna
-version = 0.9.1
-displayName = Discord Rich Presence
+version = 1.1.1
+displayName = [c/00FFFF:Discord Rich Presence] ([c/FFA500:Boss, Biome, Event Status])
 homepage = https://forums.terraria.org/index.php?threads/discordrp-rich-presence-for-terraria.66146
 includeSource = true
 dllReferences = DiscordRPC

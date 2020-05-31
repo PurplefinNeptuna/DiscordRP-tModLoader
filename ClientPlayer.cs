@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.Xna.Framework;
 using System.Linq;
 using Terraria;
 using Terraria.DataStructures;
@@ -9,6 +8,7 @@ namespace DiscordRP {
 	public class ClientPlayer : ModPlayer {
 		internal bool dead = false;
 		internal string worldStaticInfo = "";
+		internal int nearbyNPC = 0;
 
 		public override void OnEnterWorld(Player player) {
 			if(player.whoAmI == Main.myPlayer) {
@@ -34,6 +34,10 @@ namespace DiscordRP {
 		public override void PlayerDisconnect(Player player) {
 			DiscordRP.UpdateLobbyInfo();
 			DiscordRP.ClientForceUpdate();
+		}
+
+		public override void PreUpdate() {
+			nearbyNPC = Main.npc.Count(npc => npc.active && npc.townNPC && Vector2.DistanceSquared(npc.position, player.Center) <= 2250000f);
 		}
 
 		public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource) {
