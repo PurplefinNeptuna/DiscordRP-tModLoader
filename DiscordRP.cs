@@ -22,6 +22,7 @@ namespace DiscordRP {
 		public Func<bool> checker = null;
 		public string largeKey = "biome_placeholder";
 		public string largeText = "???";
+		public string client = "default";
 		public float priority = 0f;
 	}
 
@@ -31,27 +32,32 @@ namespace DiscordRP {
 		public static string GithubUserName => "PurplefinNeptuna";
 		public static string GithubProjectName => "DiscordRP-tModLoader";
 
-		internal static DiscordRpcClient Client {
+		public static DiscordRP Instance = null;
+
+		public string currentClient = "default";
+
+		internal DiscordRpcClient Client {
+			get; set;
+		}
+
+		internal RichPresence RichPresenceInstance {
 			get; private set;
 		}
 
-		internal static RichPresence Instance {
-			get; private set;
-		}
+		internal uint prevCount = 0;
+		internal bool pauseUpdate = false;
+		internal bool canCreateClient;
 
-		internal static uint prevCount = 0;
-		internal static bool pauseUpdate = false;
+		internal Dictionary<int, (string, string, string, float)> exBossIDtoDetails = new Dictionary<int, (string, string, string, float)>();
 
-		internal static Dictionary<int, (string, string, float)> exBossIDtoDetails = new Dictionary<int, (string, string, float)>();
+		internal DRPStatus customStatus = null;
 
-		internal static DRPStatus customStatus = null;
+		internal List<BiomeStatus> exBiomeStatus = new List<BiomeStatus>();
 
-		internal static List<BiomeStatus> exBiomeStatus = new List<BiomeStatus>();
+		internal string worldStaticInfo = null;
 
-		internal static string worldStaticInfo = null;
-
-		internal static bool PartyEvent => BirthdayParty.PartyIsUp;
-		internal static bool SandstormEvent => Sandstorm.Happening;
+		//internal static Dictionary<string, DiscordRpcClient> discordRPCs;
+		internal Dictionary<string, string> savedDiscordAppId;
 
 		public DiscordRP() {
 			Properties = new ModProperties() {
@@ -60,18 +66,57 @@ namespace DiscordRP {
 				AutoloadGores = true,
 				AutoloadSounds = true
 			};
+			Instance = this;
+
+			currentClient = "default";
+			canCreateClient = true;
+			pauseUpdate = false;
+			exBiomeStatus = new List<BiomeStatus>();
+			exBossIDtoDetails = new Dictionary<int, (string, string, string, float)>();
+
+			savedDiscordAppId = new Dictionary<string, string>();
+
+			RichPresenceInstance = new RichPresence {
+				Secrets = new Secrets()
+			};
 		}
 
 		public override void Load() {
-			pauseUpdate = false;
-			exBiomeStatus = new List<BiomeStatus>();
-			exBossIDtoDetails = new Dictionary<int, (string, string, float)>();
-			Instance = new RichPresence {
-				Secrets = new Secrets()
-			};
-			Client = new DiscordRpcClient(applicationID: "404654478072086529", autoEvents: false);
+
+			CreateNewDiscordRPCRichPresenceInstance("404654478072086529");
+			//CreateNewDiscordRPCRichPresenceInstance("716207249902796810", "angryslimey");
+			AddDiscordAppID("angryslimey", "716207249902796810");
+		}
+
+		public override void AddRecipes() {
+			DRPX.AddVanillaBosses();
+			DRPX.AddVanillaBiomes();
+			DRPX.AddVanillaEvents();
 
 			Main.OnTick += ClientUpdate;
+			RichPresenceInstance.Timestamps = Timestamps.Now;
+			//finished
+			canCreateClient = false;
+			ClientOnMainMenu();
+		}
+
+		public void ChangeDiscordClient(string newClient) {
+			if(newClient == currentClient) {
+				return;
+			}
+			if(!savedDiscordAppId.ContainsKey(newClient)) {
+				return;
+			}
+			currentClient = newClient;
+			Client.ApplicationID = savedDiscordAppId[newClient];
+		}
+
+		private void CreateNewDiscordRPCRichPresenceInstance(string appId, string key = "default") {
+			if(!savedDiscordAppId.ContainsKey(key)) {
+				savedDiscordAppId.Add(key, appId);
+			}
+
+			Client = new DiscordRpcClient(applicationID: appId, autoEvents: false);
 
 			bool failedToRegisterScheme = false;
 
@@ -88,14 +133,12 @@ namespace DiscordRP {
 			}
 
 			Client.Initialize();
-			Instance.Timestamps = Timestamps.Now;
 		}
 
-		public override void AddRecipes() {
-			ClientOnMainMenu();
-			DRPX.AddVanillaBosses();
-			DRPX.AddVanillaBiomes();
-			DRPX.AddVanillaEvents();
+		private void AddDiscordAppID(string key, string appID) {
+			if(!savedDiscordAppId.ContainsKey(key)) {
+				savedDiscordAppId.Add(key, appID);
+			}
 		}
 
 		private void ClientOnJoin(object sender, DiscordRPC.Message.JoinMessage args) {
@@ -108,6 +151,7 @@ namespace DiscordRP {
 		}
 
 		private void ClientOnMainMenu() {
+			ChangeDiscordClient("default");
 			pauseUpdate = false;
 			if(customStatus == null) {
 				ClientSetStatus("", "In Main Menu", "payload_test", "tModLoader");
@@ -119,58 +163,61 @@ namespace DiscordRP {
 			}
 
 			ClientSetParty();
-			Client.SetPresence(Instance);
+			ClientForceUpdate();
 		}
 
 		public override void PreSaveAndQuit() {
 			ClientOnMainMenu();
 		}
 
-		public static void ClientSetStatus(string state = "", string details = "", string largeImageKey = null, string largeImageText = null, string smallImageKey = null, string smallImageText = null) {
-			Instance.Assets = Instance.Assets ?? new Assets();
-			Instance.State = state;
-			Instance.Details = details;
+		public void ClientSetStatus(string state = "", string details = "", string largeImageKey = null, string largeImageText = null, string smallImageKey = null, string smallImageText = null) {
+			RichPresenceInstance.Assets = RichPresenceInstance.Assets ?? new Assets();
+			RichPresenceInstance.State = state;
+			RichPresenceInstance.Details = details;
 			if(largeImageKey == null) {
-				Instance.Assets.LargeImageKey = null;
-				Instance.Assets.LargeImageText = null;
+				RichPresenceInstance.Assets.LargeImageKey = null;
+				RichPresenceInstance.Assets.LargeImageText = null;
 			}
 			else {
-				Instance.Assets.LargeImageKey = largeImageKey;
-				Instance.Assets.LargeImageText = largeImageText;
+				RichPresenceInstance.Assets.LargeImageKey = largeImageKey;
+				RichPresenceInstance.Assets.LargeImageText = largeImageText;
 			}
 
 			if(smallImageKey == null) {
-				Instance.Assets.SmallImageKey = null;
-				Instance.Assets.SmallImageText = null;
+				RichPresenceInstance.Assets.SmallImageKey = null;
+				RichPresenceInstance.Assets.SmallImageText = null;
 			}
 			else {
-				Instance.Assets.SmallImageKey = smallImageKey;
-				Instance.Assets.SmallImageText = smallImageText;
+				RichPresenceInstance.Assets.SmallImageKey = smallImageKey;
+				RichPresenceInstance.Assets.SmallImageText = smallImageText;
 			}
 		}
 
-		public static void ClientSetParty(string secret = null, string id = null, int partysize = 0) {
+		public void ClientSetParty(string secret = null, string id = null, int partysize = 0) {
 			if(partysize == 0 || id == null) {
-				Instance.Secrets.JoinSecret = null;
-				Instance.Party = null;
+				RichPresenceInstance.Secrets.JoinSecret = null;
+				RichPresenceInstance.Party = null;
 			}
 			else {
-				//Instance.Secrets.JoinSecret = secret;
-				//Instance.Party = Instance.Party ?? new Party();
-				//Instance.Party.Size = partysize;
-				//Instance.Party.Max = 256;
-				//Instance.Party.ID = id;
-				Instance.Secrets.JoinSecret = null;
-				Instance.Party = null;
+				//RichPresenceInstance.Secrets.JoinSecret = secret;
+				//RichPresenceInstance.Party = RichPresenceInstance.Party ?? new Party();
+				//RichPresenceInstance.Party.Size = partysize;
+				//RichPresenceInstance.Party.Max = 256;
+				//RichPresenceInstance.Party.ID = id;
+				RichPresenceInstance.Secrets.JoinSecret = null;
+				RichPresenceInstance.Party = null;
 			}
 		}
 
-		public static void ClientForceUpdate() {
-			Client.SetPresence(Instance);
-			Client.Invoke();
+		public void ClientForceUpdate() {
+			if(Client != null) {
+				Client.SetPresence(RichPresenceInstance);
+				Main.NewText(Client.ApplicationID);
+				Client.Invoke();
+			}
 		}
 
-		public static void ClientUpdate() {
+		public void ClientUpdate() {
 			if(!Main.gameMenu && !Main.dedServ) {
 				if(Main.gamePaused || Main.gameInactive) {
 					pauseUpdate = true;
@@ -190,26 +237,22 @@ namespace DiscordRP {
 		public override void Unload() {
 			Main.OnTick -= ClientUpdate;
 			Client.Dispose();
+
 			Instance = null;
-			Client = null;
-			exBossIDtoDetails = null;
-			customStatus = null;
-			exBiomeStatus = null;
-			worldStaticInfo = null;
 		}
 
 		public override object Call(params object[] args) {
 			return DRPX.Call(args);
 		}
 
-		internal static void UpdateLobbyInfo() {
+		internal void UpdateLobbyInfo() {
 			if(Main.LobbyId != 0UL) {
 				//string sId = SteamUser.GetSteamID().ToString();
 				ClientSetParty(null, Main.LocalPlayer.name, Main.ActivePlayersCount);
 			}
 		}
 
-		internal static void ClientUpdatePlayer() {
+		internal void ClientUpdatePlayer() {
 			if(Main.LocalPlayer != null) {
 				(string itemKey, string itemText) = GetItemStat();
 				(string bigKey, string bigText) = DRPX.GetBoss();
@@ -222,7 +265,6 @@ namespace DiscordRP {
 					state = string.Format("Dead");
 				}
 
-				//DiscordRP.ClientSetStatus(state, worldStaticInfo, bigKey, bigText, itemKey, itemText);
 				ClientSetStatus(state, bigText, bigKey, worldStaticInfo, itemKey, itemText);
 				UpdateLobbyInfo();
 
@@ -231,7 +273,7 @@ namespace DiscordRP {
 			}
 		}
 
-		internal static (string, string) GetItemStat() {
+		internal (string, string) GetItemStat() {
 			int atk;
 			Item item = Main.LocalPlayer?.HeldItem;
 			if(item != null) {

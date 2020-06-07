@@ -12,28 +12,25 @@ namespace DiscordRP {
 
 		public override void OnEnterWorld(Player player) {
 			if(player.whoAmI == Main.myPlayer) {
-				if(DiscordRP.Client.IsInitialized) {
-					DiscordRP.pauseUpdate = false;
-					string wName = Main.worldName;
-					bool expert = Main.expertMode;
-					string wDiff = (expert) ? "(Expert)" : "(Normal)";
-					DiscordRP.worldStaticInfo = string.Format("Playing {0} {1}", wName, wDiff);
-					DiscordRP.ClientUpdatePlayer();
-					DiscordRP.ClientForceUpdate();
-				}
+				DiscordRP.Instance.pauseUpdate = false;
+				string wName = Main.worldName;
+				bool expert = Main.expertMode;
+				string wDiff = (expert) ? "(Expert)" : "(Normal)";
+				DiscordRP.Instance.worldStaticInfo = string.Format("Playing {0} {1}", wName, wDiff);
+				DiscordRP.Instance.ClientUpdatePlayer();
 			}
-			DiscordRP.UpdateLobbyInfo();
-			DiscordRP.ClientForceUpdate();
+			DiscordRP.Instance.UpdateLobbyInfo();
+			DiscordRP.Instance.ClientForceUpdate();
 		}
 
 		public override void PlayerConnect(Player player) {
-			DiscordRP.UpdateLobbyInfo();
-			DiscordRP.ClientForceUpdate();
+			DiscordRP.Instance.UpdateLobbyInfo();
+			DiscordRP.Instance.ClientForceUpdate();
 		}
 
 		public override void PlayerDisconnect(Player player) {
-			DiscordRP.UpdateLobbyInfo();
-			DiscordRP.ClientForceUpdate();
+			DiscordRP.Instance.UpdateLobbyInfo();
+			DiscordRP.Instance.ClientForceUpdate();
 		}
 
 		public override void PreUpdate() {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
@@ -9,12 +10,14 @@ using Microsoft.Xna.Framework;
 namespace DiscordRP {
 	public static class DRPX {
 		public static List<int> ObjectToListInt(object data) => data is List<int> ? data as List<int> : (data is int ? new List<int>() { Convert.ToInt32(data) } : null);
-		public static float ObjectToFloat(object data, float def) => data is float ? (float)data : def;
+		public static float ObjectToFloat(object data, float def) => data is float single ? single : def;
 		static Player LPlayer => Main.LocalPlayer;
 		static ClientPlayer LCPlayer => Main.LocalPlayer?.GetModPlayer<ClientPlayer>();
 
+		static ILog Logger => DiscordRP.Instance.Logger;
+
 		public static void NewMenuStatus(string details, string additionalDetails, (string, string) largeImage, (string, string) smallImage) {
-			DiscordRP.customStatus = new DRPStatus() {
+			DiscordRP.Instance.customStatus = new DRPStatus() {
 				details = details,
 				additionalDetails = additionalDetails,
 				largeKey = (largeImage.Item1 == null || largeImage.Item1 == "") ? "mod_placeholder" : largeImage.Item1,
@@ -29,20 +32,24 @@ namespace DiscordRP {
 		/// </summary>
 		/// <param name="ids">NPC id list</param>
 		/// <param name="imageKey">image key, and image name</param>
-		public static void AddBoss(List<int> ids, (string, string) imageKey, float priority = 16f) {
+		public static void AddBoss(List<int> ids, (string, string) imageKey, float priority = 16f, string client = "default") {
 			if(ids == null)
 				return;
 
-			//imageKey.Item2 = "Fighting " + imageKey.Item2;
+			Logger.Info($"Adding boss {imageKey.Item2} in {client} Instance...");
+			if(!DiscordRP.Instance.savedDiscordAppId.ContainsKey(client)) {
+				Logger.Error($"Instance {client} not found, redirected to default Instance!");
+				client = "default";
+			}
 			foreach(int id in ids) {
 				if(imageKey.Item1 == null || imageKey.Item1 == "") {
 					imageKey.Item1 = "boss_placeholder";
 				}
-				if(DiscordRP.exBossIDtoDetails != null || DiscordRP.exBossIDtoDetails?.Count > 0) {
-					DiscordRP.exBossIDtoDetails.Add(id, (imageKey.Item1, imageKey.Item2, priority));
+				if(DiscordRP.Instance.exBossIDtoDetails != null || DiscordRP.Instance.exBossIDtoDetails?.Count > 0) {
+					DiscordRP.Instance.exBossIDtoDetails.Add(id, (imageKey.Item1, imageKey.Item2, client, priority));
 				}
 				else {
-					Main.NewText("Failed to add boss custom status info, report to Purplefin Neptuna", Color.Red);
+					Logger.Error($"Failed to add boss {imageKey.Item2} custom status info, report to Purplefin Neptuna");
 				}
 			}
 		}
@@ -52,15 +59,20 @@ namespace DiscordRP {
 		/// </summary>
 		/// <param name="checker"></param>
 		/// <param name="imageKey"></param>
-		public static void AddBiome(Func<bool> checker, (string, string) imageKey, float priority = 50f) {
+		public static void AddBiome(Func<bool> checker, (string, string) imageKey, float priority = 50f, string client = "default") {
 			if(imageKey.Item1 == null || imageKey.Item1 == "") {
 				imageKey.Item1 = "biome_placeholder";
 			}
-			if(DiscordRP.exBiomeStatus != null || DiscordRP.exBiomeStatus?.Count > 0) {
-				DiscordRP.exBiomeStatus.Add(new BiomeStatus() { checker = checker, largeKey = imageKey.Item1, largeText = imageKey.Item2, priority = priority });
+			Logger.Info($"Adding biome {imageKey.Item2} in {client} Instance...");
+			if(!DiscordRP.Instance.savedDiscordAppId.ContainsKey(client)) {
+				Logger.Error($"Instance {client} not found, redirected to default Instance!");
+				client = "default";
+			}
+			if(DiscordRP.Instance.exBiomeStatus != null || DiscordRP.Instance.exBiomeStatus?.Count > 0) {
+				DiscordRP.Instance.exBiomeStatus.Add(new BiomeStatus() { checker = checker, largeKey = imageKey.Item1, largeText = imageKey.Item2, priority = priority, client = client });
 			}
 			else {
-				Main.NewText("Failed to add custom biome status info, report to Purplefin Neptuna", Color.Red);
+				Logger.Error($"Failed to add biome {imageKey.Item2} custom status info, report to Purplefin Neptuna");
 			}
 		}
 
@@ -74,22 +86,25 @@ namespace DiscordRP {
 			try {
 				string message = args[0] as string;
 				switch(message) {
-					//e.g Call("AddBoss", List<int>Id, "Angry Slimey", "boss_placeholder", float default:16f)
+					//e.g Call("AddBoss", List<int>Id, "Angry Slimey", "boss_placeholder", float default:16f, client="default")
 					case "AddBoss": {
 						List<int> Id = ObjectToListInt(args[1]);
 						(string, string) ImageKey = (args[3] as string, args[2] as string);
 						float priority = ObjectToFloat(args[4], 16f);
-						AddBoss(Id, ImageKey, priority);
+						string client = args[5] is string ? args[5] as string : "default";
+
+						AddBoss(Id, ImageKey, priority, client);
 						return "Success";
 					}
 
-					//e.g Call("AddBiome", Func<bool> checker, "SlimeFire Biome", "biome_placeholder")
+					//e.g Call("AddBiome", Func<bool> checker, "SlimeFire Biome", "biome_placeholder", float default:50f/150f, client="default")
 					case "AddEvent":
 					case "AddBiome": {
 						Func<bool> checker = args[1] as Func<bool>;
 						(string, string) ImageKey = (args[3] as string, args[2] as string);
 						float priority = ObjectToFloat(args[4], message == "AddBiome" ? 50f : 150f);
-						AddBiome(checker, ImageKey, priority);
+						string client = args[5] is string ? args[5] as string : "default";
+						AddBiome(checker, ImageKey, priority, client);
 						return "Success";
 					}
 
@@ -115,42 +130,46 @@ namespace DiscordRP {
 		public static (string, string) GetBiome() {
 			string largeImageKey = null;
 			string largeImageText = null;
+			string selectedClient = "default";
 
-			if(DiscordRP.exBiomeStatus != null || DiscordRP.exBiomeStatus?.Count > 0) {
+			if(DiscordRP.Instance.exBiomeStatus != null || DiscordRP.Instance.exBiomeStatus?.Count > 0) {
 				float lastHighestPriority = -1f;
-				foreach(BiomeStatus biome in DiscordRP.exBiomeStatus) {
+				foreach(BiomeStatus biome in DiscordRP.Instance.exBiomeStatus) {
 					if(biome.checker() && biome.priority >= lastHighestPriority) {
 						lastHighestPriority = biome.priority;
 						largeImageKey = biome.largeKey;
 						largeImageText = "In " + biome.largeText + $" ({(Main.dayTime ? "Day" : "Night")})";
+						selectedClient = biome.client;
 					}
 				}
 			}
+			DiscordRP.Instance.ChangeDiscordClient(selectedClient);
 			return (largeImageKey, largeImageText);
 		}
 
 		public static (string, string) GetBoss() {
 			string largeImageKey = null;
 			string largeImageText = null;
-
+			string selectedClient = "default";
 			bool getAnyBosses = false;
-			//Main.NewText(DiscordRP.exBossIDtoDetails.Count);
-			if(DiscordRP.exBossIDtoDetails != null || DiscordRP.exBossIDtoDetails?.Count > 0) {
+
+			if(DiscordRP.Instance.exBossIDtoDetails != null || DiscordRP.Instance.exBossIDtoDetails?.Count > 0) {
 				//new way with priority support
 				float lastHighestPriority = -1f;
-				List<int> bossNPCs = Main.npc?.Take(200).Where(npc => npc.active && DiscordRP.exBossIDtoDetails.ContainsKey(npc.type)).Select(x => x.type).ToList();
+				List<int> bossNPCs = Main.npc?.Take(200).Where(npc => npc.active && DiscordRP.Instance.exBossIDtoDetails.ContainsKey(npc.type)).Select(x => x.type).ToList();
 				foreach(int bossType in bossNPCs) {
-					(string, string, float) details = DiscordRP.exBossIDtoDetails[bossType];
-					if(details.Item3 >= lastHighestPriority) {
+					(string, string, string, float) details = DiscordRP.Instance.exBossIDtoDetails[bossType];
+					if(details.Item4 >= lastHighestPriority) {
 						getAnyBosses = true;
-						(largeImageKey, largeImageText, _) = details;
-						lastHighestPriority = details.Item3;
+						(largeImageKey, largeImageText, selectedClient, _) = details;
+						lastHighestPriority = details.Item4;
 					}
 				}
 			}
 
 			if(getAnyBosses) {
 				largeImageText = "Fighting " + largeImageText;
+				DiscordRP.Instance.ChangeDiscordClient(selectedClient);
 			}
 			else {
 				(largeImageKey, largeImageText) = GetBiome();
@@ -164,7 +183,7 @@ namespace DiscordRP {
 				("event_party", "Party"), 90f
 			);
 			AddBiome(
-				() => Sandstorm.Happening  && LPlayer.ZoneDesert,
+				() => Sandstorm.Happening && LPlayer.ZoneDesert,
 				("event_sandstorm", "Sandstorm"), 91f
 			);
 			AddBiome(
@@ -209,19 +228,19 @@ namespace DiscordRP {
 			);
 			AddBiome(
 				() => LPlayer.ZoneTowerSolar,
-				("event_solarmoon", "Solar Moon Area"), 130f
+				("event_solarmoon", "Solar Pillar area"), 130f
 			);
 			AddBiome(
 				() => LPlayer.ZoneTowerVortex,
-				("event_vortexmoon", "Vortex Moon Area"), 130f
+				("event_vortexmoon", "Vortex Pillar area"), 130f
 			);
 			AddBiome(
 				() => LPlayer.ZoneTowerNebula,
-				("event_nebulamoon", "Nebula Moon Area"), 130f
+				("event_nebulamoon", "Nebula Pillar area"), 130f
 			);
 			AddBiome(
 				() => LPlayer.ZoneTowerStardust,
-				("event_stardustmoon", "Stardust Moon Area"), 130f
+				("event_stardustmoon", "Stardust Pillar area"), 130f
 			);
 		}
 
