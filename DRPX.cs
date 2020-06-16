@@ -20,9 +20,9 @@ namespace DiscordRP {
 			DiscordRP.Instance.customStatus = new DRPStatus() {
 				details = details,
 				additionalDetails = additionalDetails,
-				largeKey = (largeImage.Item1 == null || largeImage.Item1 == "") ? "mod_placeholder" : largeImage.Item1,
+				largeKey = (string.IsNullOrWhiteSpace(largeImage.Item1)) ? "mod_placeholder" : largeImage.Item1,
 				largeImage = largeImage.Item2,
-				smallKey = (smallImage.Item1 == null || smallImage.Item1 == "") ? null : smallImage.Item1,
+				smallKey = (string.IsNullOrWhiteSpace(smallImage.Item1)) ? null : smallImage.Item1,
 				smallImage = smallImage.Item2,
 			};
 		}
@@ -42,7 +42,7 @@ namespace DiscordRP {
 				client = "default";
 			}
 			foreach(int id in ids) {
-				if(imageKey.Item1 == null || imageKey.Item1 == "") {
+				if(string.IsNullOrWhiteSpace(imageKey.Item1)) {
 					imageKey.Item1 = "boss_placeholder";
 				}
 				if(DiscordRP.Instance.exBossIDtoDetails != null || DiscordRP.Instance.exBossIDtoDetails?.Count > 0) {
@@ -60,7 +60,7 @@ namespace DiscordRP {
 		/// <param name="checker"></param>
 		/// <param name="imageKey"></param>
 		public static void AddBiome(Func<bool> checker, (string, string) imageKey, float priority = 50f, string client = "default") {
-			if(imageKey.Item1 == null || imageKey.Item1 == "") {
+			if(string.IsNullOrWhiteSpace(imageKey.Item1)) {
 				imageKey.Item1 = "biome_placeholder";
 			}
 			Logger.Info($"Adding biome {imageKey.Item2} in {client} Instance...");

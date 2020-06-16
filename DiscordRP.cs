@@ -143,7 +143,7 @@ namespace DiscordRP {
 
 		private void ClientOnJoin(object sender, DiscordRPC.Message.JoinMessage args) {
 			//this is empty lol
-			SocialAPI.Network.Connect(new SteamAddress(new CSteamID(Convert.ToUInt64(args.Secret))));
+			//SocialAPI.Network.Connect(new SteamAddress(new CSteamID(Convert.ToUInt64(args.Secret))));
 		}
 
 		private void ClientOnJoinRequested(object sender, DiscordRPC.Message.JoinRequestMessage args) {
@@ -212,7 +212,7 @@ namespace DiscordRP {
 		public void ClientForceUpdate() {
 			if(Client != null) {
 				Client.SetPresence(RichPresenceInstance);
-				Main.NewText(Client.ApplicationID);
+				//Main.NewText(Client.ApplicationID);
 				Client.Invoke();
 			}
 		}
