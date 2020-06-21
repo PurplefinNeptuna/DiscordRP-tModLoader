@@ -1,15 +1,14 @@
 using DiscordRPC;
-using Terraria;
-using Terraria.Social;
-using Terraria.Net;
-using Terraria.ModLoader;
-using Terraria.GameContent.Events;
 using System;
 using System.Collections.Generic;
-using Steamworks;
+using Terraria;
+using Terraria.ModLoader;
 
 namespace DiscordRP {
 
+	/// <summary>
+	/// Rich Presence Status class, currently only used for custom main menu
+	/// </summary>
 	internal class DRPStatus {
 		public string details = "", additionalDetails = "";
 		public string largeKey = "", largeImage = "";
@@ -18,6 +17,9 @@ namespace DiscordRP {
 		public string GetDetails() => details;
 	}
 
+	/// <summary>
+	///	Class for custom biomes
+	/// </summary>
 	internal class BiomeStatus {
 		public Func<bool> checker = null;
 		public string largeKey = "biome_placeholder";
@@ -67,39 +69,46 @@ namespace DiscordRP {
 				AutoloadSounds = true
 			};
 			Instance = this;
-
-			currentClient = "default";
-			canCreateClient = true;
-			pauseUpdate = false;
-			exBiomeStatus = new List<BiomeStatus>();
-			exBossIDtoDetails = new Dictionary<int, (string, string, string, float)>();
-
-			savedDiscordAppId = new Dictionary<string, string>();
-
-			RichPresenceInstance = new RichPresence {
-				Secrets = new Secrets()
-			};
 		}
 
 		public override void Load() {
+			if(!Main.dedServ) {
+				currentClient = "default";
+				canCreateClient = true;
+				pauseUpdate = false;
+				exBiomeStatus = new List<BiomeStatus>();
+				exBossIDtoDetails = new Dictionary<int, (string, string, string, float)>();
 
-			CreateNewDiscordRPCRichPresenceInstance("404654478072086529");
-			//CreateNewDiscordRPCRichPresenceInstance("716207249902796810", "angryslimey");
-			AddDiscordAppID("angryslimey", "716207249902796810");
+				savedDiscordAppId = new Dictionary<string, string>();
+
+				RichPresenceInstance = new RichPresence {
+					Secrets = new Secrets()
+				};
+
+				CreateNewDiscordRPCRichPresenceInstance("404654478072086529");
+				//CreateNewDiscordRPCRichPresenceInstance("716207249902796810", "angryslimey");
+				//AddDiscordAppID("angryslimey", "716207249902796810");
+			}
 		}
 
 		public override void AddRecipes() {
-			DRPX.AddVanillaBosses();
-			DRPX.AddVanillaBiomes();
-			DRPX.AddVanillaEvents();
+			if(!Main.dedServ) {
+				DRPX.AddVanillaBosses();
+				DRPX.AddVanillaBiomes();
+				DRPX.AddVanillaEvents();
 
-			Main.OnTick += ClientUpdate;
-			RichPresenceInstance.Timestamps = Timestamps.Now;
-			//finished
-			canCreateClient = false;
-			ClientOnMainMenu();
+				Main.OnTick += ClientUpdate;
+				RichPresenceInstance.Timestamps = Timestamps.Now;
+				//finished
+				canCreateClient = false;
+				ClientOnMainMenu();
+			}
 		}
 
+		/// <summary>
+		/// Change the Discord App ID, currently takes 3s to change
+		/// </summary>
+		/// <param name="newClient">New Discord App ID key</param>
 		public void ChangeDiscordClient(string newClient) {
 			if(newClient == currentClient) {
 				return;
@@ -111,6 +120,11 @@ namespace DiscordRP {
 			Client.ApplicationID = savedDiscordAppId[newClient];
 		}
 
+		/// <summary>
+		/// Create new DiscordRP client, currently only used once
+		/// </summary>
+		/// <param name="appId">Discord App ID</param>
+		/// <param name="key">key for App ID</param>
 		private void CreateNewDiscordRPCRichPresenceInstance(string appId, string key = "default") {
 			if(!savedDiscordAppId.ContainsKey(key)) {
 				savedDiscordAppId.Add(key, appId);
@@ -135,21 +149,35 @@ namespace DiscordRP {
 			Client.Initialize();
 		}
 
-		private void AddDiscordAppID(string key, string appID) {
+		/// <summary>
+		/// Add other Discord App ID
+		/// </summary>
+		/// <param name="key">the key</param>
+		/// <param name="appID">Discord App ID</param>
+		public void AddDiscordAppID(string key, string appID) {
 			if(!savedDiscordAppId.ContainsKey(key)) {
 				savedDiscordAppId.Add(key, appID);
 			}
 		}
 
+		/// <summary>
+		/// Discord OnJoin event, called on the joiner
+		/// </summary>
 		private void ClientOnJoin(object sender, DiscordRPC.Message.JoinMessage args) {
 			//this is empty lol
 			//SocialAPI.Network.Connect(new SteamAddress(new CSteamID(Convert.ToUInt64(args.Secret))));
 		}
 
+		/// <summary>
+		/// Discord OnJoinRequested event, called on the host, currently deny everything lol
+		/// </summary>
 		private void ClientOnJoinRequested(object sender, DiscordRPC.Message.JoinRequestMessage args) {
 			Client.Respond(args, false);
 		}
 
+		/// <summary>
+		/// Change the status to main menu
+		/// </summary>
 		private void ClientOnMainMenu() {
 			ChangeDiscordClient("default");
 			pauseUpdate = false;
@@ -166,10 +194,24 @@ namespace DiscordRP {
 			ClientForceUpdate();
 		}
 
+		/// <summary>
+		///	override this because i can only find this method that called when going to main menu
+		/// </summary>
 		public override void PreSaveAndQuit() {
-			ClientOnMainMenu();
+			if(!Main.dedServ) {
+				ClientOnMainMenu();
+			}
 		}
 
+		/// <summary>
+		/// Change the status
+		/// </summary>
+		/// <param name="state">lower status string</param>
+		/// <param name="details">upper status string</param>
+		/// <param name="largeImageKey">key for large image</param>
+		/// <param name="largeImageText">text for large image</param>
+		/// <param name="smallImageKey">key for small image</param>
+		/// <param name="smallImageText">text for small image</param>
 		public void ClientSetStatus(string state = "", string details = "", string largeImageKey = null, string largeImageText = null, string smallImageKey = null, string smallImageText = null) {
 			RichPresenceInstance.Assets = RichPresenceInstance.Assets ?? new Assets();
 			RichPresenceInstance.State = state;
@@ -193,6 +235,12 @@ namespace DiscordRP {
 			}
 		}
 
+		/// <summary>
+		/// set the party settings
+		/// </summary>
+		/// <param name="secret">party secret</param>
+		/// <param name="id">party id</param>
+		/// <param name="partysize">party current size</param>
 		public void ClientSetParty(string secret = null, string id = null, int partysize = 0) {
 			if(partysize == 0 || id == null) {
 				RichPresenceInstance.Secrets.JoinSecret = null;
@@ -209,14 +257,23 @@ namespace DiscordRP {
 			}
 		}
 
+		/// <summary>
+		/// Forcing update rich presence
+		/// </summary>
 		public void ClientForceUpdate() {
 			if(Client != null) {
+				if(!Client.IsInitialized) {
+					Client.Initialize();
+				}
 				Client.SetPresence(RichPresenceInstance);
 				//Main.NewText(Client.ApplicationID);
 				Client.Invoke();
 			}
 		}
 
+		/// <summary>
+		///	run this everytick to update
+		/// </summary>
 		public void ClientUpdate() {
 			if(!Main.gameMenu && !Main.dedServ) {
 				if(Main.gamePaused || Main.gameInactive) {
@@ -227,7 +284,7 @@ namespace DiscordRP {
 					pauseUpdate = false;
 				}
 
-				if((prevCount % 120u == 0) && !pauseUpdate) {
+				if((prevCount % 60u == 0) && !pauseUpdate) {
 					ClientUpdatePlayer();
 					ClientForceUpdate();
 				}
@@ -242,9 +299,15 @@ namespace DiscordRP {
 		}
 
 		public override object Call(params object[] args) {
-			return DRPX.Call(args);
+			if(!Main.dedServ) {
+				return DRPX.Call(args);
+			}
+			return "Can't call on server";
 		}
 
+		/// <summary>
+		/// update the party info
+		/// </summary>
 		internal void UpdateLobbyInfo() {
 			if(Main.LobbyId != 0UL) {
 				//string sId = SteamUser.GetSteamID().ToString();
@@ -252,10 +315,13 @@ namespace DiscordRP {
 			}
 		}
 
+		/// <summary>
+		/// method for update the status, checking from item to biome/boss/events
+		/// </summary>
 		internal void ClientUpdatePlayer() {
 			if(Main.LocalPlayer != null) {
 				(string itemKey, string itemText) = GetItemStat();
-				(string bigKey, string bigText) = DRPX.GetBoss();
+				(string bigKey, string bigText, string selectedClient) = DRPX.GetBoss();
 
 				string state;
 				if(!Main.LocalPlayer.GetModPlayer<ClientPlayer>().dead) {
@@ -267,12 +333,17 @@ namespace DiscordRP {
 
 				ClientSetStatus(state, bigText, bigKey, worldStaticInfo, itemKey, itemText);
 				UpdateLobbyInfo();
+				Instance.ChangeDiscordClient(selectedClient);
 
 				if(Main.LocalPlayer.GetModPlayer<ClientPlayer>().dead)
 					ClientForceUpdate();
 			}
 		}
 
+		/// <summary>
+		/// Get the player's item stat
+		/// </summary>
+		/// <returns>key and text for small images</returns>
 		internal (string, string) GetItemStat() {
 			int atk;
 			Item item = Main.LocalPlayer?.HeldItem;

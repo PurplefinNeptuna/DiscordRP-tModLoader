@@ -3,9 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
-using Terraria.ID;
 using Terraria.GameContent.Events;
-using Microsoft.Xna.Framework;
+using Terraria.ID;
 
 namespace DiscordRP {
 	public static class DRPX {
@@ -16,6 +15,13 @@ namespace DiscordRP {
 
 		static ILog Logger => DiscordRP.Instance.Logger;
 
+		/// <summary>
+		/// Override main menu status
+		/// </summary>
+		/// <param name="details">upper text</param>
+		/// <param name="additionalDetails">lower text</param>
+		/// <param name="largeImage">key and text for large image</param>
+		/// <param name="smallImage">key and text for small image</param>
 		public static void NewMenuStatus(string details, string additionalDetails, (string, string) largeImage, (string, string) smallImage) {
 			DiscordRP.Instance.customStatus = new DRPStatus() {
 				details = details,
@@ -28,10 +34,12 @@ namespace DiscordRP {
 		}
 
 		/// <summary>
-		/// Add Bosses to Discord Rich Presence
+		/// Add new npc to boss list to detect
 		/// </summary>
-		/// <param name="ids">NPC id list</param>
-		/// <param name="imageKey">image key, and image name</param>
+		/// <param name="ids">the npc ids</param>
+		/// <param name="imageKey">image key</param>
+		/// <param name="priority">priority</param>
+		/// <param name="client">discord app id key</param>
 		public static void AddBoss(List<int> ids, (string, string) imageKey, float priority = 16f, string client = "default") {
 			if(ids == null)
 				return;
@@ -55,10 +63,12 @@ namespace DiscordRP {
 		}
 
 		/// <summary>
-		///
+		/// Add new biome/event to detect
 		/// </summary>
-		/// <param name="checker"></param>
-		/// <param name="imageKey"></param>
+		/// <param name="checker">function to check, detect biome/event if returns true</param>
+		/// <param name="imageKey">image key</param>
+		/// <param name="priority">priority</param>
+		/// <param name="client">discord app id key</param>
 		public static void AddBiome(Func<bool> checker, (string, string) imageKey, float priority = 50f, string client = "default") {
 			if(string.IsNullOrWhiteSpace(imageKey.Item1)) {
 				imageKey.Item1 = "biome_placeholder";
@@ -82,6 +92,10 @@ namespace DiscordRP {
 		/// <param name="args"></param>
 		/// <returns>String of call results</returns>
 		public static object Call(params object[] args) {
+			if(DiscordRP.Instance == null) {
+				return "Failure";
+			}
+			int arglen = args.Length;
 			Array.Resize(ref args, 15);
 			try {
 				string message = args[0] as string;
@@ -111,11 +125,28 @@ namespace DiscordRP {
 					//e.g. Call("MainMenu", "details", "belowDetails", "mod_placeholder", "modName")
 					case "MainMenu":
 					case "MainMenuOverride": {
+						if(!DiscordRP.Instance.canCreateClient) {
+							return "Failure";
+						}
 						string details = args[1] as string;
 						string additionalDetails = args[2] as string;
 						(string, string) largeImage = (args[3] as string, args[4] as string);
 						(string, string) smallImage = (args[5] as string, args[6] as string);
 						NewMenuStatus(details, additionalDetails, largeImage, smallImage);
+						return "Success";
+					}
+
+					//e.g. Call("AddClient", "716207249902796810", "angryslimey")
+					case "AddClient":
+					case "AddNewClient":
+					case "NewClient":
+					case "AddDiscordClient": {
+						if(arglen != 3 || !DiscordRP.Instance.canCreateClient) {
+							return "Failure";
+						}
+						string newID = args[1] as string;
+						string idKey = args[2] as string;
+						DiscordRP.Instance?.AddDiscordAppID(idKey, newID);
 						return "Success";
 					}
 					default:
@@ -127,7 +158,11 @@ namespace DiscordRP {
 			return "Failure";
 		}
 
-		public static (string, string) GetBiome() {
+		/// <summary>
+		///
+		/// </summary>
+		/// <returns></returns>
+		public static (string, string, string) GetBiome() {
 			string largeImageKey = null;
 			string largeImageText = null;
 			string selectedClient = "default";
@@ -143,11 +178,15 @@ namespace DiscordRP {
 					}
 				}
 			}
-			DiscordRP.Instance.ChangeDiscordClient(selectedClient);
-			return (largeImageKey, largeImageText);
+			//DiscordRP.Instance.ChangeDiscordClient(selectedClient);
+			return (largeImageKey, largeImageText, selectedClient);
 		}
 
-		public static (string, string) GetBoss() {
+		/// <summary>
+		///
+		/// </summary>
+		/// <returns></returns>
+		public static (string, string, string) GetBoss() {
 			string largeImageKey = null;
 			string largeImageText = null;
 			string selectedClient = "default";
@@ -169,12 +208,12 @@ namespace DiscordRP {
 
 			if(getAnyBosses) {
 				largeImageText = "Fighting " + largeImageText;
-				DiscordRP.Instance.ChangeDiscordClient(selectedClient);
+				//DiscordRP.Instance.ChangeDiscordClient(selectedClient);
 			}
 			else {
-				(largeImageKey, largeImageText) = GetBiome();
+				(largeImageKey, largeImageText, selectedClient) = GetBiome();
 			}
-			return (largeImageKey, largeImageText);
+			return (largeImageKey, largeImageText, selectedClient);
 		}
 
 		public static void AddVanillaEvents() {
@@ -199,20 +238,16 @@ namespace DiscordRP {
 				("event_goblin", "Goblin Invasion"), 95f
 			);
 			AddBiome(
+				() => Main.bloodMoon && LPlayer.ZoneOverworldHeight && !Main.dayTime,
+				("event_bloodmoon", "Blood Moon"), 96f
+			);
+			AddBiome(
 				() => Main.invasionType == 2 && Main.invasionSize > 0 && LPlayer.ZoneOverworldHeight,
 				("event_frostlegion", "Frost Legion"), 100f
 			);
 			AddBiome(
 				() => Main.invasionType == 3 && Main.invasionSize > 0 && LPlayer.ZoneOverworldHeight,
 				("event_pirate", "Pirate Invasion"), 110f
-			);
-			AddBiome(
-				() => Main.invasionType == 4 && Main.invasionSize > 0 && LPlayer.ZoneOverworldHeight,
-				("event_martian", "Martian Madness"), 120f
-			);
-			AddBiome(
-				() => Main.bloodMoon && LPlayer.ZoneOverworldHeight && !Main.dayTime,
-				("event_bloodmoon", "Blood Moon"), 96f
 			);
 			AddBiome(
 				() => Main.pumpkinMoon && LPlayer.ZoneOverworldHeight && !Main.dayTime,
@@ -225,6 +260,10 @@ namespace DiscordRP {
 			AddBiome(
 				() => Main.eclipse && LPlayer.ZoneOverworldHeight && Main.dayTime,
 				("event_eclipse", "Solar Eclipse"), 115f
+			);
+			AddBiome(
+				() => Main.invasionType == 4 && Main.invasionSize > 0 && LPlayer.ZoneOverworldHeight,
+				("event_martian", "Martian Madness"), 120f
 			);
 			AddBiome(
 				() => LPlayer.ZoneTowerSolar,
@@ -274,72 +313,72 @@ namespace DiscordRP {
 				("biome_ujungle", "Underground Jungle"), 6f
 			);
 			AddBiome(
-				() => ClientWorld.beeHive,
-				("biome_beehive", "Bee Hive"), 7f
-			);
-			AddBiome(
-				() => ClientWorld.jungleTemple,
-				("biome_temple", "Jungle Temple"), 8f
-			);
-			AddBiome(
 				() => LPlayer.ZoneDesert,
-				("biome_desert", "Desert"), 9f
+				("biome_desert", "Desert"), 7f
 			);
 			AddBiome(
 				() => LPlayer.ZoneUndergroundDesert,
-				("biome_udesert", "Underground Desert"), 10f
+				("biome_udesert", "Underground Desert"), 8f
 			);
 			AddBiome(
 				() => LPlayer.ZoneSnow,
-				("biome_snow", "Snow"), 11f
+				("biome_snow", "Snow"), 9f
 			);
 			AddBiome(
 				() => LPlayer.ZoneSnow && LPlayer.ZoneRockLayerHeight,
-				("biome_usnow", "Underground Snow"), 12f
-			);
-			AddBiome(
-				() => LPlayer.ZoneDungeon,
-				("biome_dungeon", "Dungeon"), 13f
+				("biome_usnow", "Underground Snow"), 10f
 			);
 			AddBiome(
 				() => LPlayer.ZoneHoly,
-				("biome_holy", "Hollow"), 14f
+				("biome_holy", "Hollow"), 11f
 			);
 			AddBiome(
 				() => LPlayer.ZoneHoly && LPlayer.ZoneRockLayerHeight,
-				("biome_uholy", "Underground Hollow"), 15f
+				("biome_uholy", "Underground Hollow"), 12f
 			);
 			AddBiome(
 				() => LPlayer.ZoneCorrupt,
-				("biome_corrupt", "Corruption"), 16f
+				("biome_corrupt", "Corruption"), 13f
 			);
 			AddBiome(
 				() => LPlayer.ZoneCorrupt && LPlayer.ZoneRockLayerHeight,
-				("biome_ucorrupt", "Underground Corruption"), 17f
+				("biome_ucorrupt", "Underground Corruption"), 14f
 			);
 			AddBiome(
 				() => LPlayer.ZoneCrimson,
-				("biome_crimson", "Crimson"), 18f
+				("biome_crimson", "Crimson"), 15f
 			);
 			AddBiome(
 				() => LPlayer.ZoneCrimson && LPlayer.ZoneRockLayerHeight,
-				("biome_ucrimson", "Underground Crimson"), 19f
+				("biome_ucrimson", "Underground Crimson"), 16f
 			);
 			AddBiome(
 				() => ClientWorld.spiderCave,
-				("biome_spider", "Spider Cave"), 20f
+				("biome_spider", "Spider Cave"), 17f
 			);
 			AddBiome(
 				() => LPlayer.ZoneGlowshroom && (LPlayer.ZoneDirtLayerHeight || LPlayer.ZoneRockLayerHeight),
-				("biome_umushroom", "Underground Mushroom"), 21f
+				("biome_umushroom", "Underground Mushroom"), 18f
 			);
 			AddBiome(
 				() => ClientWorld.graniteCave,
-				("biome_granite", "Granite Cave"), 22f
+				("biome_granite", "Granite Cave"), 19f
 			);
 			AddBiome(
 				() => ClientWorld.marbleCave,
-				("biome_marble", "Marble Cave"), 23f
+				("biome_marble", "Marble Cave"), 20f
+			);
+			AddBiome(
+				() => ClientWorld.beeHive,
+				("biome_beehive", "Bee Hive"), 21f
+			);
+			AddBiome(
+				() => LPlayer.ZoneDungeon,
+				("biome_dungeon", "Dungeon"), 22f
+			);
+			AddBiome(
+				() => ClientWorld.jungleTemple,
+				("biome_temple", "Jungle Temple"), 23f
 			);
 			AddBiome(
 				() => LPlayer.ZoneSkyHeight,
