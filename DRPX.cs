@@ -440,7 +440,7 @@ namespace DiscordRP {
 			}, ("boss_destroyer", "The Destroyer"), 9f);
 			AddBoss(new List<int>() {
 				NPCID.SkeletronPrime
-			}, ("boss_prime", "Skeleton Prime"), 10f);
+			}, ("boss_prime", "Skeletron Prime"), 10f);
 			AddBoss(new List<int>() {
 				NPCID.Plantera
 			}, ("boss_plantera", "Plantera"), 11f);
