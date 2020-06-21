@@ -1,7 +1,7 @@
 author = Purplefin Neptuna
 version = 1.2.2
 displayName = [c/00FFFF:Discord Rich Presence] ([c/FFA500:Boss, Biome, Event Status])
-homepage = https://forums.terraria.org/index.php?threads/discordrp-rich-presence-for-terraria.66146
+homepage = https://github.com/PurplefinNeptuna/DiscordRP-tModLoader
 includeSource = true
 dllReferences = DiscordRPC
 buildIgnore = *.git, *.csproj, *.user, *.sln, *.exe, .vs/*, bin/*, obj/*, AssetImage/*
