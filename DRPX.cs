@@ -1,7 +1,7 @@
-﻿using log4net;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using log4net;
 using Terraria;
 using Terraria.GameContent.Events;
 using Terraria.ID;
@@ -10,10 +10,12 @@ namespace DiscordRP {
 	public static class DRPX {
 		public static List<int> ObjectToListInt(object data) => data is List<int> ? data as List<int> : (data is int ? new List<int>() { Convert.ToInt32(data) } : null);
 		public static float ObjectToFloat(object data, float def) => data is float single ? single : def;
-		static Player LPlayer => Main.LocalPlayer;
-		static ClientPlayer LCPlayer => Main.LocalPlayer?.GetModPlayer<ClientPlayer>();
 
-		static ILog Logger => DiscordRP.Instance.Logger;
+		private static Player LPlayer => Main.LocalPlayer;
+
+		private static ClientPlayer LCPlayer => Main.LocalPlayer?.GetModPlayer<ClientPlayer>();
+
+		private static ILog Logger => DiscordRPMod.Instance.Logger;
 
 		/// <summary>
 		/// Override main menu status
@@ -23,7 +25,7 @@ namespace DiscordRP {
 		/// <param name="largeImage">key and text for large image</param>
 		/// <param name="smallImage">key and text for small image</param>
 		public static void NewMenuStatus(string details, string additionalDetails, (string, string) largeImage, (string, string) smallImage) {
-			DiscordRP.Instance.customStatus = new DRPStatus() {
+			DiscordRPMod.Instance.customStatus = new DRPStatus() {
 				details = details,
 				additionalDetails = additionalDetails,
 				largeKey = (string.IsNullOrWhiteSpace(largeImage.Item1)) ? "mod_placeholder" : largeImage.Item1,
@@ -41,20 +43,20 @@ namespace DiscordRP {
 		/// <param name="priority">priority</param>
 		/// <param name="client">discord app id key</param>
 		public static void AddBoss(List<int> ids, (string, string) imageKey, float priority = 16f, string client = "default") {
-			if(ids == null)
+			if (ids == null)
 				return;
 
-			Logger.Info($"Adding boss {imageKey.Item2} in {client} Instance...");
-			if(!DiscordRP.Instance.savedDiscordAppId.ContainsKey(client)) {
+			//Logger.Info($"Adding boss {imageKey.Item2} in {client} Instance...");
+			if (!DiscordRPMod.Instance.savedDiscordAppId.ContainsKey(client)) {
 				Logger.Error($"Instance {client} not found, redirected to default Instance!");
 				client = "default";
 			}
-			foreach(int id in ids) {
-				if(string.IsNullOrWhiteSpace(imageKey.Item1)) {
+			foreach (int id in ids) {
+				if (string.IsNullOrWhiteSpace(imageKey.Item1)) {
 					imageKey.Item1 = "boss_placeholder";
 				}
-				if(DiscordRP.Instance.exBossIDtoDetails != null || DiscordRP.Instance.exBossIDtoDetails?.Count > 0) {
-					DiscordRP.Instance.exBossIDtoDetails.Add(id, (imageKey.Item1, imageKey.Item2, client, priority));
+				if (DiscordRPMod.Instance.exBossIDtoDetails != null || DiscordRPMod.Instance.exBossIDtoDetails?.Count > 0) {
+					DiscordRPMod.Instance.exBossIDtoDetails.Add(id, (imageKey.Item1, imageKey.Item2, client, priority));
 				}
 				else {
 					Logger.Error($"Failed to add boss {imageKey.Item2} custom status info, report to Purplefin Neptuna");
@@ -70,16 +72,16 @@ namespace DiscordRP {
 		/// <param name="priority">priority</param>
 		/// <param name="client">discord app id key</param>
 		public static void AddBiome(Func<bool> checker, (string, string) imageKey, float priority = 50f, string client = "default") {
-			if(string.IsNullOrWhiteSpace(imageKey.Item1)) {
+			if (string.IsNullOrWhiteSpace(imageKey.Item1)) {
 				imageKey.Item1 = "biome_placeholder";
 			}
-			Logger.Info($"Adding biome {imageKey.Item2} in {client} Instance...");
-			if(!DiscordRP.Instance.savedDiscordAppId.ContainsKey(client)) {
+			//Logger.Info($"Adding biome {imageKey.Item2} in {client} Instance...");
+			if (!DiscordRPMod.Instance.savedDiscordAppId.ContainsKey(client)) {
 				Logger.Error($"Instance {client} not found, redirected to default Instance!");
 				client = "default";
 			}
-			if(DiscordRP.Instance.exBiomeStatus != null || DiscordRP.Instance.exBiomeStatus?.Count > 0) {
-				DiscordRP.Instance.exBiomeStatus.Add(new BiomeStatus() { checker = checker, largeKey = imageKey.Item1, largeText = imageKey.Item2, priority = priority, client = client });
+			if (DiscordRPMod.Instance.exBiomeStatus != null || DiscordRPMod.Instance.exBiomeStatus?.Count > 0) {
+				DiscordRPMod.Instance.exBiomeStatus.Add(new BiomeStatus() { checker = checker, largeKey = imageKey.Item1, largeText = imageKey.Item2, priority = priority, client = client });
 			}
 			else {
 				Logger.Error($"Failed to add biome {imageKey.Item2} custom status info, report to Purplefin Neptuna");
@@ -92,14 +94,14 @@ namespace DiscordRP {
 		/// <param name="args"></param>
 		/// <returns>String of call results</returns>
 		public static object Call(params object[] args) {
-			if(DiscordRP.Instance == null) {
+			if (DiscordRPMod.Instance == null) {
 				return "Failure";
 			}
 			int arglen = args.Length;
 			Array.Resize(ref args, 15);
 			try {
 				string message = args[0] as string;
-				switch(message) {
+				switch (message) {
 					//e.g Call("AddBoss", List<int>Id, "Angry Slimey", "boss_placeholder", float default:16f, client="default")
 					case "AddBoss": {
 						List<int> Id = ObjectToListInt(args[1]);
@@ -125,7 +127,7 @@ namespace DiscordRP {
 					//e.g. Call("MainMenu", "details", "belowDetails", "mod_placeholder", "modName")
 					case "MainMenu":
 					case "MainMenuOverride": {
-						if(!DiscordRP.Instance.canCreateClient) {
+						if (!DiscordRPMod.Instance.canCreateClient) {
 							return "Failure";
 						}
 						string details = args[1] as string;
@@ -141,12 +143,12 @@ namespace DiscordRP {
 					case "AddNewClient":
 					case "NewClient":
 					case "AddDiscordClient": {
-						if(arglen != 3 || !DiscordRP.Instance.canCreateClient) {
+						if (arglen != 3 || !DiscordRPMod.Instance.canCreateClient) {
 							return "Failure";
 						}
 						string newID = args[1] as string;
 						string idKey = args[2] as string;
-						DiscordRP.Instance?.AddDiscordAppID(idKey, newID);
+						DiscordRPMod.Instance?.AddDiscordAppID(idKey, newID);
 						return "Success";
 					}
 					default:
@@ -167,13 +169,13 @@ namespace DiscordRP {
 			string largeImageText = null;
 			string selectedClient = "default";
 
-			if(DiscordRP.Instance.exBiomeStatus != null || DiscordRP.Instance.exBiomeStatus?.Count > 0) {
+			if (DiscordRPMod.Instance.exBiomeStatus != null || DiscordRPMod.Instance.exBiomeStatus?.Count > 0) {
 				float lastHighestPriority = -1f;
-				foreach(BiomeStatus biome in DiscordRP.Instance.exBiomeStatus) {
-					if(biome.checker() && biome.priority >= lastHighestPriority) {
+				foreach (BiomeStatus biome in DiscordRPMod.Instance.exBiomeStatus) {
+					if (biome.checker() && biome.priority >= lastHighestPriority) {
 						lastHighestPriority = biome.priority;
 						largeImageKey = biome.largeKey;
-						largeImageText = "In " + biome.largeText + $" ({(Main.dayTime ? "Day" : "Night")})";
+						largeImageText = "In " + biome.largeText + (DiscordRPMod.Instance.config.showTimeCycle ? $" ({(Main.dayTime ? "Day" : "Night")})" : "");
 						selectedClient = biome.client;
 					}
 				}
@@ -192,13 +194,13 @@ namespace DiscordRP {
 			string selectedClient = "default";
 			bool getAnyBosses = false;
 
-			if(DiscordRP.Instance.exBossIDtoDetails != null || DiscordRP.Instance.exBossIDtoDetails?.Count > 0) {
+			if (DiscordRPMod.Instance.exBossIDtoDetails != null || DiscordRPMod.Instance.exBossIDtoDetails?.Count > 0) {
 				//new way with priority support
 				float lastHighestPriority = -1f;
-				List<int> bossNPCs = Main.npc?.Take(200).Where(npc => npc.active && DiscordRP.Instance.exBossIDtoDetails.ContainsKey(npc.type)).Select(x => x.type).ToList();
-				foreach(int bossType in bossNPCs) {
-					(string, string, string, float) details = DiscordRP.Instance.exBossIDtoDetails[bossType];
-					if(details.Item4 >= lastHighestPriority) {
+				List<int> bossNPCs = Main.npc?.Take(200).Where(npc => npc.active && DiscordRPMod.Instance.exBossIDtoDetails.ContainsKey(npc.type)).Select(x => x.type).ToList();
+				foreach (int bossType in bossNPCs) {
+					(string, string, string, float) details = DiscordRPMod.Instance.exBossIDtoDetails[bossType];
+					if (details.Item4 >= lastHighestPriority) {
 						getAnyBosses = true;
 						(largeImageKey, largeImageText, selectedClient, _) = details;
 						lastHighestPriority = details.Item4;
@@ -206,7 +208,7 @@ namespace DiscordRP {
 				}
 			}
 
-			if(getAnyBosses) {
+			if (getAnyBosses) {
 				largeImageText = "Fighting " + largeImageText;
 				//DiscordRP.Instance.ChangeDiscordClient(selectedClient);
 			}

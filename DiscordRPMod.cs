@@ -1,6 +1,6 @@
-using DiscordRPC;
 using System;
 using System.Collections.Generic;
+using DiscordRPC;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -28,15 +28,17 @@ namespace DiscordRP {
 		public float priority = 0f;
 	}
 
-	public class DiscordRP : Mod {
+	public class DiscordRPMod : Mod {
 
 		//Mod Helper Issues report
 		public static string GithubUserName => "PurplefinNeptuna";
 		public static string GithubProjectName => "DiscordRP-tModLoader";
 
-		public static DiscordRP Instance = null;
+		public static DiscordRPMod Instance = null;
 
 		public string currentClient = "default";
+
+		internal uint Cooldown => config.timer * 60u;
 
 		internal DiscordRpcClient Client {
 			get; set;
@@ -50,6 +52,10 @@ namespace DiscordRP {
 		internal bool pauseUpdate = false;
 		internal bool canCreateClient;
 
+		internal ClientConfig config = null;
+
+		internal Timestamps timestamp = null;
+
 		internal Dictionary<int, (string, string, string, float)> exBossIDtoDetails = new Dictionary<int, (string, string, string, float)>();
 
 		internal DRPStatus customStatus = null;
@@ -61,7 +67,7 @@ namespace DiscordRP {
 		//internal static Dictionary<string, DiscordRpcClient> discordRPCs;
 		internal Dictionary<string, string> savedDiscordAppId;
 
-		public DiscordRP() {
+		public DiscordRPMod() {
 			Properties = new ModProperties() {
 				Autoload = true,
 				AutoloadBackgrounds = true,
@@ -72,7 +78,7 @@ namespace DiscordRP {
 		}
 
 		public override void Load() {
-			if(!Main.dedServ) {
+			if (!Main.dedServ) {
 				currentClient = "default";
 				canCreateClient = true;
 				pauseUpdate = false;
@@ -85,20 +91,21 @@ namespace DiscordRP {
 					Secrets = new Secrets()
 				};
 
-				CreateNewDiscordRPCRichPresenceInstance("404654478072086529");
+				timestamp = Timestamps.Now;
+
+				CreateNewDiscordRPCRichPresenceInstance();
 				//CreateNewDiscordRPCRichPresenceInstance("716207249902796810", "angryslimey");
 				//AddDiscordAppID("angryslimey", "716207249902796810");
 			}
 		}
 
 		public override void AddRecipes() {
-			if(!Main.dedServ) {
+			if (!Main.dedServ) {
 				DRPX.AddVanillaBosses();
 				DRPX.AddVanillaBiomes();
 				DRPX.AddVanillaEvents();
 
 				Main.OnTick += ClientUpdate;
-				RichPresenceInstance.Timestamps = Timestamps.Now;
 				//finished
 				canCreateClient = false;
 				ClientOnMainMenu();
@@ -110,14 +117,16 @@ namespace DiscordRP {
 		/// </summary>
 		/// <param name="newClient">New Discord App ID key</param>
 		public void ChangeDiscordClient(string newClient) {
-			if(newClient == currentClient) {
+			if (newClient == currentClient) {
 				return;
 			}
-			if(!savedDiscordAppId.ContainsKey(newClient)) {
+			if (!savedDiscordAppId.ContainsKey(newClient)) {
 				return;
 			}
 			currentClient = newClient;
-			Client.ApplicationID = savedDiscordAppId[newClient];
+			if (Client.ApplicationID != savedDiscordAppId[newClient]) {
+				Client.ApplicationID = savedDiscordAppId[newClient];
+			}
 		}
 
 		/// <summary>
@@ -125,8 +134,9 @@ namespace DiscordRP {
 		/// </summary>
 		/// <param name="appId">Discord App ID</param>
 		/// <param name="key">key for App ID</param>
-		private void CreateNewDiscordRPCRichPresenceInstance(string appId, string key = "default") {
-			if(!savedDiscordAppId.ContainsKey(key)) {
+		internal void CreateNewDiscordRPCRichPresenceInstance(string key = "default") {
+			string appId = "404654478072086529";
+			if (!savedDiscordAppId.ContainsKey(key)) {
 				savedDiscordAppId.Add(key, appId);
 			}
 
@@ -137,16 +147,18 @@ namespace DiscordRP {
 			try {
 				Client.RegisterUriScheme("1281930");
 			}
-			catch(Exception) {
+			catch (Exception) {
 				failedToRegisterScheme = true;
 			}
 
-			if(!failedToRegisterScheme) {
+			if (!failedToRegisterScheme) {
 				Client.OnJoinRequested += ClientOnJoinRequested;
 				Client.OnJoin += ClientOnJoin;
 			}
 
-			Client.Initialize();
+			if (config.enable) {
+				Client.Initialize();
+			}
 		}
 
 		/// <summary>
@@ -155,7 +167,7 @@ namespace DiscordRP {
 		/// <param name="key">the key</param>
 		/// <param name="appID">Discord App ID</param>
 		public void AddDiscordAppID(string key, string appID) {
-			if(!savedDiscordAppId.ContainsKey(key)) {
+			if (!savedDiscordAppId.ContainsKey(key)) {
 				savedDiscordAppId.Add(key, appID);
 			}
 		}
@@ -181,7 +193,7 @@ namespace DiscordRP {
 		private void ClientOnMainMenu() {
 			ChangeDiscordClient("default");
 			pauseUpdate = false;
-			if(customStatus == null) {
+			if (customStatus == null) {
 				ClientSetStatus("", "In Main Menu", "payload_test", "tModLoader");
 			}
 			else {
@@ -198,7 +210,7 @@ namespace DiscordRP {
 		///	override this because i can only find this method that called when going to main menu
 		/// </summary>
 		public override void PreSaveAndQuit() {
-			if(!Main.dedServ) {
+			if (!Main.dedServ) {
 				ClientOnMainMenu();
 			}
 		}
@@ -216,7 +228,7 @@ namespace DiscordRP {
 			RichPresenceInstance.Assets = RichPresenceInstance.Assets ?? new Assets();
 			RichPresenceInstance.State = state;
 			RichPresenceInstance.Details = details;
-			if(largeImageKey == null) {
+			if (largeImageKey == null) {
 				RichPresenceInstance.Assets.LargeImageKey = null;
 				RichPresenceInstance.Assets.LargeImageText = null;
 			}
@@ -225,7 +237,7 @@ namespace DiscordRP {
 				RichPresenceInstance.Assets.LargeImageText = largeImageText;
 			}
 
-			if(smallImageKey == null) {
+			if (smallImageKey == null) {
 				RichPresenceInstance.Assets.SmallImageKey = null;
 				RichPresenceInstance.Assets.SmallImageText = null;
 			}
@@ -242,7 +254,7 @@ namespace DiscordRP {
 		/// <param name="id">party id</param>
 		/// <param name="partysize">party current size</param>
 		public void ClientSetParty(string secret = null, string id = null, int partysize = 0) {
-			if(partysize == 0 || id == null) {
+			if (partysize == 0 || id == null) {
 				RichPresenceInstance.Secrets.JoinSecret = null;
 				RichPresenceInstance.Party = null;
 			}
@@ -261,12 +273,12 @@ namespace DiscordRP {
 		/// Forcing update rich presence
 		/// </summary>
 		public void ClientForceUpdate() {
-			if(Client != null) {
-				if(!Client.IsInitialized) {
+			if (Client != null && !Client.IsDisposed) {
+				if (!Client.IsInitialized && config.enable) {
 					Client.Initialize();
 				}
+				RichPresenceInstance.Timestamps = config.showTime ? timestamp : null;
 				Client.SetPresence(RichPresenceInstance);
-				//Main.NewText(Client.ApplicationID);
 				Client.Invoke();
 			}
 		}
@@ -275,8 +287,8 @@ namespace DiscordRP {
 		///	run this everytick to update
 		/// </summary>
 		public void ClientUpdate() {
-			if(!Main.gameMenu && !Main.dedServ) {
-				if(Main.gamePaused || Main.gameInactive) {
+			if (!Main.gameMenu && !Main.dedServ) {
+				if (Main.gamePaused || Main.gameInactive) {
 					pauseUpdate = true;
 				}
 				else {
@@ -284,7 +296,7 @@ namespace DiscordRP {
 					pauseUpdate = false;
 				}
 
-				if((prevCount % 60u == 0) && !pauseUpdate) {
+				if ((prevCount % Cooldown == 0) && !pauseUpdate) {
 					ClientUpdatePlayer();
 					ClientForceUpdate();
 				}
@@ -296,10 +308,11 @@ namespace DiscordRP {
 			Client.Dispose();
 
 			Instance = null;
+			config = null;
 		}
 
 		public override object Call(params object[] args) {
-			if(!Main.dedServ) {
+			if (!Main.dedServ) {
 				return DRPX.Call(args);
 			}
 			return "Can't call on server";
@@ -309,7 +322,7 @@ namespace DiscordRP {
 		/// update the party info
 		/// </summary>
 		internal void UpdateLobbyInfo() {
-			if(Main.LobbyId != 0UL) {
+			if (Main.LobbyId != 0UL) {
 				//string sId = SteamUser.GetSteamID().ToString();
 				ClientSetParty(null, Main.LocalPlayer.name, Main.ActivePlayersCount);
 			}
@@ -319,23 +332,28 @@ namespace DiscordRP {
 		/// method for update the status, checking from item to biome/boss/events
 		/// </summary>
 		internal void ClientUpdatePlayer() {
-			if(Main.LocalPlayer != null) {
+			if (Main.LocalPlayer != null) {
 				(string itemKey, string itemText) = GetItemStat();
 				(string bigKey, string bigText, string selectedClient) = DRPX.GetBoss();
 
 				string state;
-				if(!Main.LocalPlayer.GetModPlayer<ClientPlayer>().dead) {
-					state = string.Format("HP: {0} MP: {1} DEF: {2}", Main.LocalPlayer.statLife, Main.LocalPlayer.statMana, Main.LocalPlayer.statDefense);
+				if (!Main.LocalPlayer.GetModPlayer<ClientPlayer>().dead) {
+					state = $"{(config.showHealth ? $"HP: {Main.LocalPlayer.statLife} " : "")}";
+					state += $"{(config.showMana ? $"MP: {Main.LocalPlayer.statMana} " : "")}";
+					state += $"{(config.showDefense ? $"DEF: {Main.LocalPlayer.statDefense}" : "")}";
+					if (string.IsNullOrWhiteSpace(state)) {
+						state = null;
+					}
 				}
 				else {
-					state = string.Format("Dead");
+					state = (config.showHealth || config.showMana || config.showDefense) ? string.Format("Dead") : null;
 				}
 
 				ClientSetStatus(state, bigText, bigKey, worldStaticInfo, itemKey, itemText);
 				UpdateLobbyInfo();
 				Instance.ChangeDiscordClient(selectedClient);
 
-				if(Main.LocalPlayer.GetModPlayer<ClientPlayer>().dead)
+				if (Main.LocalPlayer.GetModPlayer<ClientPlayer>().dead)
 					ClientForceUpdate();
 			}
 		}
@@ -345,31 +363,39 @@ namespace DiscordRP {
 		/// </summary>
 		/// <returns>key and text for small images</returns>
 		internal (string, string) GetItemStat() {
-			int atk;
+			int atk = -1;
+			string key = null;
+			string text = null;
+			string atkType = "";
 			Item item = Main.LocalPlayer?.HeldItem;
-			if(item != null) {
-				if(item.melee) {
-					atk = (int)Math.Ceiling(item.damage * Main.LocalPlayer.meleeDamage);
-					return (string.Format("atk_melee"), string.Format("{0} ({1} Melee)", item.Name, atk));
+			if (item != null) {
+				text = item.Name;
+				if (item.melee) {
+					atk = (int) Math.Ceiling(item.damage * Main.LocalPlayer.meleeDamage);
+					atkType = "Melee";
 				}
-				else if(item.ranged) {
-					atk = (int)Math.Ceiling(item.damage * Main.LocalPlayer.rangedDamage);
-					return (string.Format("atk_range"), string.Format("{0} ({1} Ranged)", item.Name, atk));
+				else if (item.ranged) {
+					atk = (int) Math.Ceiling(item.damage * Main.LocalPlayer.rangedDamage);
+					atkType = "Range";
 				}
-				else if(item.magic) {
-					atk = (int)Math.Ceiling(item.damage * Main.LocalPlayer.magicDamage);
-					return (string.Format("atk_magic"), string.Format("{0} ({1} Magic)", item.Name, atk));
+				else if (item.magic) {
+					atk = (int) Math.Ceiling(item.damage * Main.LocalPlayer.magicDamage);
+					atkType = "Magic";
 				}
-				else if(item.thrown) {
-					atk = (int)Math.Ceiling(item.damage * Main.LocalPlayer.thrownDamage);
-					return (string.Format("atk_throw"), string.Format("{0} ({1} Thrown)", item.Name, atk));
+				else if (item.thrown) {
+					atk = (int) Math.Ceiling(item.damage * Main.LocalPlayer.thrownDamage);
+					atkType = "Throw";
 				}
-				else if(item.summon) {
-					atk = (int)Math.Ceiling(item.damage * Main.LocalPlayer.minionDamage);
-					return (string.Format("atk_summon"), string.Format("{0} ({1} Summon)", item.Name, atk));
+				else if (item.summon) {
+					atk = (int) Math.Ceiling(item.damage * Main.LocalPlayer.minionDamage);
+					atkType = "Summon";
 				}
 			}
-			return (null, null);
+			if (atk >= 0) {
+				key = "atk_" + atkType.ToLower();
+				text += (config.showDamage ? $" ({atk} Damage)" : "");
+			}
+			return (key, text);
 		}
 	}
 }

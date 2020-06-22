@@ -1,5 +1,5 @@
-﻿using Microsoft.Xna.Framework;
-using System.Linq;
+﻿using System.Linq;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
@@ -11,26 +11,26 @@ namespace DiscordRP {
 		internal int nearbyNPC = 0;
 
 		public override void OnEnterWorld(Player player) {
-			if(player.whoAmI == Main.myPlayer) {
-				DiscordRP.Instance.pauseUpdate = false;
+			if (player.whoAmI == Main.myPlayer) {
+				DiscordRPMod.Instance.pauseUpdate = false;
 				string wName = Main.worldName;
 				bool expert = Main.expertMode;
 				string wDiff = (expert) ? "(Expert)" : "(Normal)";
-				DiscordRP.Instance.worldStaticInfo = string.Format("Playing {0} {1}", wName, wDiff);
-				DiscordRP.Instance.ClientUpdatePlayer();
+				DiscordRPMod.Instance.worldStaticInfo = string.Format("Playing {0} {1}", wName, wDiff);
+				DiscordRPMod.Instance.ClientUpdatePlayer();
 			}
-			DiscordRP.Instance.UpdateLobbyInfo();
-			DiscordRP.Instance.ClientForceUpdate();
+			DiscordRPMod.Instance.UpdateLobbyInfo();
+			DiscordRPMod.Instance.ClientForceUpdate();
 		}
 
 		public override void PlayerConnect(Player player) {
-			DiscordRP.Instance.UpdateLobbyInfo();
-			DiscordRP.Instance.ClientForceUpdate();
+			DiscordRPMod.Instance.UpdateLobbyInfo();
+			DiscordRPMod.Instance.ClientForceUpdate();
 		}
 
 		public override void PlayerDisconnect(Player player) {
-			DiscordRP.Instance.UpdateLobbyInfo();
-			DiscordRP.Instance.ClientForceUpdate();
+			DiscordRPMod.Instance.UpdateLobbyInfo();
+			DiscordRPMod.Instance.ClientForceUpdate();
 		}
 
 		public override void PreUpdate() {
@@ -38,13 +38,13 @@ namespace DiscordRP {
 		}
 
 		public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource) {
-			if(player.whoAmI == Main.myPlayer) {
+			if (player.whoAmI == Main.myPlayer) {
 				dead = true;
 			}
 		}
 
 		public override void OnRespawn(Player player) {
-			if(player.whoAmI == Main.myPlayer) {
+			if (player.whoAmI == Main.myPlayer) {
 				dead = false;
 			}
 		}

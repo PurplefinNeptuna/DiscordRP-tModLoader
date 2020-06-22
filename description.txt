@@ -1,4 +1,5 @@
 This mod add a little extra detail of your ingame terraria activity to your discord status.
+Now with config to configure visibility.
 
 Displayed info:
 - Current encountered boss
