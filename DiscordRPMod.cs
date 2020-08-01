@@ -305,7 +305,7 @@ namespace DiscordRP {
 
 		public override void Unload() {
 			Main.OnTick -= ClientUpdate;
-			Client.Dispose();
+			Client?.Dispose();
 
 			Instance = null;
 			config = null;
