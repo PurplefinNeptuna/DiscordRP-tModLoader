@@ -38,8 +38,6 @@ namespace DiscordRP {
 
 		public string currentClient = "default";
 
-		internal uint Cooldown => config.timer * 60u;
-
 		internal DiscordRpcClient Client {
 			get; set;
 		}
@@ -48,7 +46,7 @@ namespace DiscordRP {
 			get; private set;
 		}
 
-		internal uint prevCount = 0;
+		internal int prevSend = 0;
 		internal bool pauseUpdate = false;
 		internal bool canCreateClient;
 
@@ -66,6 +64,8 @@ namespace DiscordRP {
 
 		//internal static Dictionary<string, DiscordRpcClient> discordRPCs;
 		internal Dictionary<string, string> savedDiscordAppId;
+
+		internal int nowSeconds => (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
 
 		public DiscordRPMod() {
 			Properties = new ModProperties() {
@@ -292,13 +292,15 @@ namespace DiscordRP {
 					pauseUpdate = true;
 				}
 				else {
-					prevCount++;
 					pauseUpdate = false;
 				}
 
-				if ((prevCount % Cooldown == 0) && !pauseUpdate) {
+				int now = nowSeconds;
+				if (!pauseUpdate && now != prevSend && ((now - prevSend) % config.timer) == 0) {
 					ClientUpdatePlayer();
 					ClientForceUpdate();
+
+					prevSend = now;
 				}
 			}
 		}
